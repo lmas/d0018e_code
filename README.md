@@ -1,2 +1,3 @@
-# d0018e_code
-d0018e-database project
+# D0018E, Databasteknik, V25
+
+Creating a basic E-commerce site with a relational database.
