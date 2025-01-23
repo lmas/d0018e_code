@@ -11,4 +11,5 @@ Creating a basic E-commerce site with a relational database.
 | 4               | 5    | Clean up, and adding extra functionality | Low        | Low      | Project backlog |
 
 We'll be selling USB cables
+
 MySQL, Python Flask, HTML/CSS
