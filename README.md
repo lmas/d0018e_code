@@ -12,4 +12,4 @@ Creating a basic E-commerce site with a relational database.
 
 We'll be selling USB cables
 
-MySQL, Python Flask, HTML/CSS
+we are going to use: MySQL, Python Flask, HTML/CSS
