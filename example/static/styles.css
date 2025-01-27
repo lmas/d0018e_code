@@ -1,0 +1,90 @@
+body {
+  background-color: rgb(10, 27, 29);
+}
+h1 {
+  color: rgb(255, 255, 255);
+  text-align: center;
+}
+h2 {
+  color: rgb(255, 255, 255);
+  font-size: medium;
+  text-align: left;
+}
+h3 {
+  color: rgb(255, 255, 255);
+  font-size: medium;
+  text-align: center;
+}
+p {
+  color: rgb(206, 180, 180);
+  text-align:center;
+}
+
+.button {
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+
+ul {
+  list-style: none;
+}
+
+li {
+  list-style: none;
+}
+
+.img_box {
+  display: flex;
+}
+
+img {
+  object-fit: fill;
+  max-height: auto;
+  max-width: 100%;
+}
+
+.product_img {
+  max-width: 25%;
+  max-height: auto;
+}
+
+.img_text {
+  position:absolute;
+}
+
+.container {
+  display: flex; /* or inline-flex */
+  flex-wrap: wrap;
+  justify-content: left;
+  align-content: flex-start;
+  gap: 10px 20px;
+}
+
+.item {
+  display:flex;
+  flex-direction: column;
+  flex-grow: 0;
+  width: 200px;
+  height: auto;
+}
+
+.left {
+  display: block;
+  margin-left: 0%;
+  margin-right: auto;
+  size: 25%;
+}
+
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  size: 25%;
+}

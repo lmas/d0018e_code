@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Our products</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>Our of products</h1>
+    <ul class="container">
+    {% for item in productList %}
+        <a href="/product/{{ item.id }}">
+        <li class="item">
+            <h2 class="img_text">{{ item.name }}</h2>
+            <img src="{{ item.url }}" class="img">
+        </li>
+        </a>
+    {% endfor %}
+    <!-- Test product not found
+    <li>
+        <a href="/product/666"><h2>404</h2></a>
+    </li>
+    -->
+    </ul>
+    
+    <!-- Button to get back to homepage -->
+    <p><button type="button"><a href="/home/">Back</a></button></p>
+</body>
+</html>
