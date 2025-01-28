@@ -16,14 +16,14 @@ c1 = prod("Coffee", "123", "https://upload.wikimedia.org/wikipedia/commons/4/45/
 c2 = prod("Coffee2", "987", "https://www.spectrumhealth.ie/wp-content/uploads/2017/11/steamingcupofcoffeewithspiltcoffeebeans-2048x1365.jpg.webp")
 items = [c1, c2]
 
-@app.route('/home/')
-def hello():
-    return render_template('home.html')
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 @app.route('/products/')
 def products():
     # Query server for a list of all items
-    
+
     return render_template('products.html', productList=items)
 
 @app.route('/info/')
