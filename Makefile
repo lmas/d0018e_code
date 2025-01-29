@@ -2,6 +2,11 @@
 env:
 	test -d .venv || python -m venv .venv
 
+# Run webserver locally
+run:
+	source .venv/bin/activate
+	python app.py
+
 # Install pip and requirements
 deps:
 	python -m pip install --upgrade pip
