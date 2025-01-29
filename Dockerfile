@@ -1,4 +1,6 @@
 
+# Documentation: https://docs.docker.com/reference/dockerfile/
+
 # Load a standard linux alpine image with python v3.11 preinstalled
 FROM python:3.11-alpine
 
