@@ -16,3 +16,9 @@ services:
     image: flask:0.0.0
     ports:
       - 5000:5000
+
+  db:
+    image: mysql:9.2.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: example
