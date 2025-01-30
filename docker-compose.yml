@@ -20,5 +20,7 @@ services:
   db:
     image: mysql:9.2.0
     restart: always
+    volumes:
+      - /srv/db:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: example
