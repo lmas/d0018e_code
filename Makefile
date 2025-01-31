@@ -2,15 +2,14 @@
 env:
 	test -d .venv || python -m venv .venv
 
-# Run webserver locally
-run:
-	source .venv/bin/activate
-	python app.py
-
 # Install pip and requirements
 deps:
-	python -m pip install --upgrade pip
-	python -m pip install -r requirements.txt
+	. .venv/bin/activate && python -m pip install --upgrade pip
+	. .venv/bin/activate && python -m pip install -r requirements.txt
+
+# Run webserver locally
+run:
+	. .venv/bin/activate && python example/app.py
 
 # Run tests and save coverage stats
 test:
