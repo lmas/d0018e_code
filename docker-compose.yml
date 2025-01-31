@@ -22,5 +22,7 @@ services:
     volumes:
       - /srv/flask/mysql.conf:/etc/mysql/my.cnf
       - /srv/db:/var/lib/mysql
+    ports:
+      - 7070:7070
     environment:
       MYSQL_ROOT_PASSWORD: supersecretlool
