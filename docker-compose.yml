@@ -20,7 +20,9 @@ services:
   mysql:
     image: mysql:9.2.0
     volumes:
-      # - /srv/flask/mysql.conf:/etc/mysql/my.cnf
+      - /srv/flask/mysql.conf:/etc/mysql/my.cnf
       - /srv/db:/var/lib/mysql
+    ports:
+      - 7070:7070
     environment:
       MYSQL_ROOT_PASSWORD: supersecretlool
