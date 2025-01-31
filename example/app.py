@@ -12,7 +12,7 @@ class prod:
         self.id = id
         self.url = url
 
-c1 = prod("Coffee", "123", "https://upload.wikimedia.org/wikipedia/commons/4/45/A_small_cup_of_coffee.JPG")
+c1 = prod("USB-2.0", "123", "images/usb-2.0.png")
 c2 = prod("Coffee2", "987", "https://www.spectrumhealth.ie/wp-content/uploads/2017/11/steamingcupofcoffeewithspiltcoffeebeans-2048x1365.jpg.webp")
 items = [c1, c2]
 
