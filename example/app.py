@@ -11,6 +11,7 @@ class prod:
         self.name = name
         self.id = id
         self.url = url
+
 #c = prod("", "", "/static/images/")
 c1 = prod("USB-2.0", "usb-2.0", "/static/images/usb-2.0.png")
 c2 = prod("USB-C", "usb-c", "/static/images/usb-c.jpg")
@@ -18,6 +19,7 @@ c3 = prod("USB-mini", "usb-mini", "/static/images/usb-mini.PNG")
 c4 = prod("USB-MICRO", "usb-micro", "/static/images/usb-micro.PNG")
 c5 = prod("USB-B", "usb-b", "/static/images/usb-b.PNG")
 items = [c1, c2, c3, c4, c5]
+
 
 @app.route('/')
 def index():
