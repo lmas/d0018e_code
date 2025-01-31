@@ -17,10 +17,10 @@ services:
     ports:
       - 5000:5000
 
-  db:
+  mysql:
     image: mysql:9.2.0
-    restart: always
     volumes:
+      # - /srv/flask/mysql.conf:/etc/mysql/my.cnf
       - /srv/db:/var/lib/mysql
     environment:
-      MYSQL_ROOT_PASSWORD: example
+      MYSQL_ROOT_PASSWORD: supersecretlool
