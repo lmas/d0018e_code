@@ -1,10 +1,34 @@
 from flask import Flask
+import MySQLdb
+from flask import render_template
+
+db = MySQLdb.connect(host="13.51.70.120",
+                     port=7070,    # your host, usually localhost
+                     user="flask",         # your username
+                     passwd="super_secret_flask",  # your password
+                     db="base")        # name of the data base
+
+# you must create a Cursor object. It will let
+#  you execute all the queries you need
+cur = db.cursor()
+
+# Use all the SQL you like
+cur.execute("DROP TABLE Kalles_table;")
+cur.execute("CREATE TABLE IF NOT EXISTS Kalles_table(id INTEGER AUTO_INCREMENT, PRIMARY KEY(id), string VARCHAR(45));")
+cur.execute("INSERT INTO Kalles_table(string) VALUES('exempel string'),('exempel string');")
+cur.execute("SELECT * FROM Kalles_table;")
+
+# print all the first cell of all the rows
+for row in cur.fetchall():
+    print (row)
+
+db.close()
 app = Flask(__name__)
 
 # Get into correct terminal: source .venv/bin/activate
 # Start with: python app.py
 
-from flask import render_template
+
 
 class prod:
     def __init__(self, name, id, url):
