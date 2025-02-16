@@ -8,28 +8,7 @@
     <h1>{{ item.name }}</h1>
     <img src="{{ item.url }}" class="center product_img">
     <h3>ProductID: {{ item.id }}</h3>
-    <form>
-        <input type="radio" id="hona" name="kön" value="{{ item.name }}">
-        <label for="hona"  >Hona </label>
-        <input type="radio" id="hane" name="kön" value="{{ item.name }}">
-        <label for="hane" >Hane </label>
-        <h4>Andra Ändan</h4>
-        <label for="cars">Choose a cable for the other end:</label>
 
-        <select name="cables" id="cables">
-          <option value="usb-c">usb-c</option>
-          <option value="usb-b">usb-b</option>
-          <option value="usb 2.0">usb 2.0</option>
-          <option value="usb mini">usb mini</option>
-          <option value="usb micro">usb micro</option>
-        </select>
-        <input type="radio" id="andra-ändan-hona" name="kön2" value="{{ item.name }}">
-        <label for="andra-ändan-hona"  >Hona </label>
-        <input type="radio" id="andra-ändan-hane" name="kön2" value="{{ item.name }}">
-        <label for="andra-ändan-hane" >Hane </label>
-        <br><input type="submit" value="Submit"><br/>
-    </form>
-    
     <!-- Button to get back to products or homepage -->
     <p><button type="button"><a href="/products/">Back</a></button></p>
     <p><button type="button"><a href="/">Home</a></button></p>
