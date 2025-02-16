@@ -128,6 +128,7 @@ def close_db(exception=None):
 # --- In what order Products table has the fields ---
 # Products (Name, Price, Speed, Length, ImageFileName, Connector1, Connector2, Color)
 
+# Values etc below taken from https://en.wikipedia.org/wiki/USB
 # -- Quick and dirty Standards & Types table - Only allow these when adding them products (No mismatch of standards/types)? --
 ## USB 1.0          (Type-A 1.0, Type-B) # Only have 1.1 and assume 1.0 stopped manufacture when 1.1 was released?
 # USB 1.1           (Type-A 1.1, Type-B, Mini-A, Mini-AB, Mini-B)
