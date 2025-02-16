@@ -9,7 +9,8 @@ deps:
 
 # Run webserver locally
 run:
-	. .venv/bin/activate && python3 example/app.py
+	# . .venv/bin/activate && python3 example/app.py
+	. .venv/bin/activate && python3 backend.py
 
 # Run tests and save coverage stats
 test:
@@ -22,14 +23,11 @@ coverage:
 # Run static analysis (aka linting) and find common errors
 lint:
 	pycodestyle --max-line-length 120 *.py
+	typos
 
 # Autoformat python code
 format:
 	black --line-length 120 *.py
-
-# Run local webserver
-serve:
-	python3 backend.py
 
 # Clean up leftovers
 clean:
