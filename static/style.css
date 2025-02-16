@@ -1,0 +1,74 @@
+
+/******************************************************************************/
+/*SITE-WIDE LAYOUT ELEMENTS*/
+
+body {
+	/* Flexbox is the easiest to work with.
+	 * Tutorial: https://css-tricks.com/snippets/css/a-guide-to-flexbox/ */
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+
+	/*Force using the whole Vertical screen Height*/
+	min-height: 100vh;
+}
+
+header {
+	height: 100px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	background-color: aliceblue; /*TODO*/
+}
+
+#logo {
+	font-size: 32px;
+}
+
+footer {
+	text-align: center;
+}
+
+#page {
+	/* Auto-expand the whole content area to fill the screen height
+	 * and pushing down the footer to the bottom. */
+	margin-bottom: auto;
+	display: flex;
+}
+
+#menu {
+	width: 300px;
+	padding: 50px;
+	display: flex;
+	flex-direction: column;
+	/*Adds extra spacing between flexbox items*/
+	gap: 20px;
+
+	background-color: red; /*TODO*/
+}
+
+#menu hr {
+	/*Let it expand to full width*/
+	width: 100%;
+}
+
+#content {
+	padding: 50px;
+	display: flex;
+	flex-direction: column;
+	/*Forces the element to expand and fill out most of the available area*/
+	flex-grow: 1;
+}
+
+/******************************************************************************/
+/*CUSTOM CSS CLASSES AND OTHER CONTENT*/
+
+.banner {
+	height: 150px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	background-color: yellow; /*TODO*/
+}

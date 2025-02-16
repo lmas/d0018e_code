@@ -1,5 +1,6 @@
 Flask
-mysqlclient
+mysql-connector-python
+python-dotenv
 
 # development dependencies
 coverage

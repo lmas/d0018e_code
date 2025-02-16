@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>{% block title %}{% endblock %} | USB-R-US</title>
+		<meta charset="UTF-8">
+		<!--Fixes issues with weird screen sizes and zoom-->
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link href="/static/style.css" rel="stylesheet">
+	</head>
+	<body>
+		<header>
+			<span id="logo">USB-R-US</span>
+		</header>
+
+		<div id="page">
+			<aside id="menu">
+				<a href="/">Home</a>
+				<a href="/products">Products</a>
+				<hr>
+				<!--TODO: Add Register/login/logout/profile/add/del products links-->
+				<a href="/login">Login</a>
+				<hr>
+				<a href="/about">About us</a>
+			</aside>
+
+			<main id="content">
+				{% block content %}{% endblock %}
+			</main>
+		</div>
+
+		<footer>
+			<p>Copyright &#169; <a href="/about">USB-R-US</a></p>
+		</footer>
+	</body>
+</html>
