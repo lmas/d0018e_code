@@ -165,4 +165,4 @@ def page_about():
 if __name__ == "__main__":
     # TODO: run the db and test it!
     # init_db()
-    app.run(debug=True)  # TODO: should turn off debug mode when demo'ing?
+    app.run()
