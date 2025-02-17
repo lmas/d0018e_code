@@ -10,7 +10,7 @@ deps:
 # Run webserver locally
 run:
 	# . .venv/bin/activate && python3 example/app.py
-	. .venv/bin/activate && flask --app=./backend.py run --debug
+	. .venv/bin/activate && python3 backend.py
 
 # Run tests and save coverage stats
 test:
