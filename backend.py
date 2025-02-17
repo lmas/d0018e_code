@@ -18,6 +18,10 @@ app = Flask(__name__)
 # GLOBAL HELPER FUNCTIONS (these should be at the top of the file)
 
 
+# Simple translation tables for showing prettier values as strings
+ROLES = {0:"Customer", 1:"Administrator"}
+GENDERS = {0:"male", 1:"female"}
+
 # This function looks up the HTTP request's URL parameters and tries to return
 # a string value stored under the parameter pointed to using "name".
 # If the parameter wasn't found, a "default" value will be returned instead.
@@ -120,17 +124,42 @@ def close_db(exception=None):
         db.close()
 
 
+def get_products(db, limit=10):
+    # TODO: gonna need args for group by/order by
+    params = {"limit":limit}
+    with db.cursor(dictionary=True) as cur:
+        cur.execute("""
+            SELECT
+                p.*,
+                c1.gender as "c1gender", c1.type as "c1type",
+                c2.gender as "c2gender", c2.type as "c2type"
+            FROM
+                (SELECT * FROM Products LIMIT %(limit)s) p
+                LEFT JOIN Connectors c1 ON p.connector1 = c1.id
+                LEFT JOIN Connectors c2 ON p.connector2 = c2.id
+            ;
+            """, params)
+        rows = cur.fetchall()
+    return rows
+
 ################################################################################
 # FLASK APPLICATION AND PAGES
 
 @app.route("/")
 def page_home():
-    return render_template("home.html")
+    db = get_db()
+    rows = get_products(db, limit=5)
+    db.close()
+    return render_template("home.html", products=rows, genders=GENDERS)
 
 
 @app.route("/about")
 def page_about():
     return render_template("about.html")
+
+@app.route("/product/<id>")
+def page_product(id):
+    return "product: " + id
 
 
 ################################################################################
