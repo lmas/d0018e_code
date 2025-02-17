@@ -142,9 +142,9 @@ Connectors = {
 	"Mini-AB":				5,
 	"Mini-B":				6,
 	"Micro-A":				7,
-    "Micro-AB":				8,
-    "Micro-B":				9,
-    "Type-C":				10,
+	"Micro-AB":				8,
+	"Micro-B":				9,
+	"Type-C":				10,
 }
 
 ## --- END OF TABLES TO BE CONVERTED TO CONSTANTS ---
