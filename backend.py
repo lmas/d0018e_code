@@ -110,14 +110,14 @@ def close_db(exception=None):
 # Orange    = 6
 # Brown     = 7
 Colors = {
-    "Black":    0,
-    "White":    1,
-    "Red":      2,
-    "Yellow":   3,
-    "Green":    4,
-    "Blue":     5,
-    "Orange":   6,
-    "Brown":    7,
+	"Black":	0,
+	"White":	1,
+	"Red":		2,
+	"Yellow":	3,
+	"Green":	4,
+	"Blue":		5,
+	"Orange":	6,
+	"Brown":	7,
 }
 
 # -- Quick and dirty Connector table --
@@ -168,13 +168,13 @@ Connectors = {
 Standards_and_Types = {
 	"USB 1.0":			["Type A", "Type B"],
 	"USB 1.1":			["Type A", "Type B", "Micro A", "Micro AB", "Micro B"],
-    "USB 2.0":			["Type A", "Type B", "Mini A", "Mini AB", "Mini B"],
-    "USB 2.0 Revised":	["Type A", "Type B", "Mini A", "Mini AB", "Mini B", "Micro A", "Micro AB", "Micro B", "Type C"],
-    "USB 3.0":			["Type A", "Type B", "Mini A", "Mini AB", "Mini B", "Micro A", "Micro AB", "Micro B", "Type C"],
-    "USB 3.1":			["Type A", "Type B", "Mini A", "Mini AB", "Mini B", "Micro A", "Micro AB", "Micro B", "Type C"],
-    "USB 3.2":			["Type A", "Type B", "Mini A", "Mini AB", "Mini B", "Micro A", "Micro AB", "Micro B", "Type C"],
-    "USB4":				["Type C"],
-    "USB4 2.0":			["Type C"],
+	"USB 2.0":			["Type A", "Type B", "Mini A", "Mini AB", "Mini B"],
+	"USB 2.0 Revised":	["Type A", "Type B", "Mini A", "Mini AB", "Mini B", "Micro A", "Micro AB", "Micro B", "Type C"],
+	"USB 3.0":			["Type A", "Type B", "Mini A", "Mini AB", "Mini B", "Micro A", "Micro AB", "Micro B", "Type C"],
+	"USB 3.1":			["Type A", "Type B", "Mini A", "Mini AB", "Mini B", "Micro A", "Micro AB", "Micro B", "Type C"],
+	"USB 3.2":			["Type A", "Type B", "Mini A", "Mini AB", "Mini B", "Micro A", "Micro AB", "Micro B", "Type C"],
+	"USB4":				["Type C"],
+	"USB4 2.0":			["Type C"],
 }
 
 # -- Quick and dirty Speed table --
