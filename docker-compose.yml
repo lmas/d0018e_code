@@ -32,11 +32,11 @@ services:
       - mysql
     environment:
       # These variables must reflect the values from the mysql container above
-      FLASK_DB_HOST: EXAMPLE
-      FLASK_DB_PORT: EXAMPLE
-      FLASK_DB_DATABASE: EXAMPLE
+      FLASK_DB_HOST: mysql
+      FLASK_DB_PORT: 7070
       FLASK_DB_USER: EXAMPLE
       FLASK_DB_PASSWORD: EXAMPLE
+      FLASK_DB_DATABASE: EXAMPLE
     ports:
       - 5000:5000
 

@@ -59,17 +59,16 @@ def open_db():
         host=os.getenv("DB_HOST"),
         port=os.getenv("DB_PORT"),
         user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWD"),
+        password=os.getenv("DB_PASSWORD"),
         database=os.getenv("DB_DATABASE"),
     )
 
 
 # Setups the db.
 def init_db():
-    print("Initialising database...")
     db = open_db()
-
     # Recreate the whole database
+    print("Initialising database...")
     with open("schemas/create_database.sql") as f:
         db.execute(f.read().decode("utf8"))
 
@@ -215,6 +214,5 @@ def page_about():
 ################################################################################
 
 if __name__ == "__main__":
-    # TODO: run the db and test it!
-    # init_db()
+    init_db()
     app.run()
