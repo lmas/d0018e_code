@@ -1,4 +1,4 @@
-import os
+import os, sys
 
 from flask import Flask, request, render_template
 from flask import g as request_globals
@@ -54,23 +54,48 @@ def get_int_param(name, default=0):
 
 # Helper for opening a new connection to the external db. Returns a db object.
 def open_db():
-    print("Connecting to database...")
-    return mysql.connector.connect(
-        host=os.getenv("DB_HOST"),
-        port=os.getenv("DB_PORT"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_DATABASE"),
-    )
+    try:
+        db = mysql.connector.connect(
+            host = os.getenv("DB_HOST"),
+            port = os.getenv("DB_PORT"),
+            user = os.getenv("DB_USER"),
+            password = os.getenv("DB_PASSWORD"),
+            database = os.getenv("DB_DATABASE"),
+
+            # Better or more obvious error handling?
+            # sql_mode = "STRICT_ALL_TABLES",
+            # get_warnings = True,
+            # raise_on_warnings = True,
+        )
+        return db
+    except mysql.connector.Error as err:
+        print("Error connecting to database:", err)
+        print("\n--- Check host IP and if it's turned on! ---")
+        sys.exit(1)
 
 
-# Setups the db.
+# Setup the db at app startup.
 def init_db():
     db = open_db()
-    # Recreate the whole database
-    print("Initialising database...")
-    with open("schemas/create_database.sql") as f:
-        db.execute(f.read().decode("utf8"))
+    with open("schemas/create_database.sql", encoding="utf-8") as f:
+        try:
+
+            with db.cursor() as cur:
+                # Executes the whole SQL schema, where each SQL command run by itself
+                # (thanks to the map_results=True)
+                cur.execute(f.read(), map_results=True)
+
+                # Then this next line must be executed to catch any syntax errors
+                # in the SQL! Stupid mysql...
+                for _ in cur.fetchsets(): pass
+
+        except mysql.connector.Error as err:
+            print("Error initialising database:", err)
+            sys.exit(1)
+
+    # Don't forget to commit the db changes and insertions!
+    db.commit()
+    db.close()
 
 
 # Returns the current request's open db connection.
@@ -111,5 +136,5 @@ def page_about():
 ################################################################################
 
 if __name__ == "__main__":
-    #init_db()
+    init_db()
     app.run()
