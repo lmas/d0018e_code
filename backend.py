@@ -19,8 +19,9 @@ app = Flask(__name__)
 
 
 # Simple translation tables for showing prettier values as strings
-ROLES = {0:"Customer", 1:"Administrator"}
-GENDERS = {0:"male", 1:"female"}
+ROLES = {0: "Customer", 1: "Administrator"}
+GENDERS = {0: "male", 1: "female"}
+
 
 # This function looks up the HTTP request's URL parameters and tries to return
 # a string value stored under the parameter pointed to using "name".
@@ -60,12 +61,11 @@ def get_int_param(name, default=0):
 def open_db():
     try:
         db = mysql.connector.connect(
-            host = os.getenv("DB_HOST"),
-            port = os.getenv("DB_PORT"),
-            user = os.getenv("DB_USER"),
-            password = os.getenv("DB_PASSWORD"),
-            database = os.getenv("DB_DATABASE"),
-
+            host=os.getenv("DB_HOST"),
+            port=os.getenv("DB_PORT"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_DATABASE"),
             # Better or more obvious error handling?
             # sql_mode = "STRICT_ALL_TABLES",
             # get_warnings = True,
@@ -91,7 +91,8 @@ def init_db():
 
                 # Then this next line must be executed to catch any syntax errors
                 # in the SQL! Stupid mysql...
-                for _ in cur.fetchsets(): pass
+                for _ in cur.fetchsets():
+                    pass
 
         except mysql.connector.Error as err:
             print("Error initialising database:", err)
@@ -126,9 +127,10 @@ def close_db(exception=None):
 
 def get_products(db, limit=10):
     # TODO: gonna need args for group by/order by
-    params = {"limit":limit}
+    params = {"limit": limit}
     with db.cursor(dictionary=True) as cur:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT
                 p.*,
                 c1.gender as "c1gender", c1.type as "c1type",
@@ -138,12 +140,16 @@ def get_products(db, limit=10):
                 LEFT JOIN Connectors c1 ON p.connector1 = c1.id
                 LEFT JOIN Connectors c2 ON p.connector2 = c2.id
             ;
-            """, params)
+            """,
+            params,
+        )
         rows = cur.fetchall()
     return rows
 
+
 ################################################################################
 # FLASK APPLICATION AND PAGES
+
 
 @app.route("/")
 def page_home():
@@ -156,6 +162,7 @@ def page_home():
 @app.route("/about")
 def page_about():
     return render_template("about.html")
+
 
 @app.route("/product/<id>")
 def page_product(id):
