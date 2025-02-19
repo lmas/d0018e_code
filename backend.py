@@ -340,6 +340,7 @@ def page_changeprofile_post():
     error = 0
     # Connect to database, make sure no fields are empty and send the query
     db = get_db()
+    #This could probably be done better, will look at it at a later date
     row = get_user(db, session.get("email"))
     if email == "":
        email = session["email"]
@@ -367,6 +368,7 @@ def page_changeprofile_post():
                 ,
                 param
             )
+            # DONT FORGET TO COMMIT THE UPDATE/INSERT
             db.commit()
             db.close()
         except mysql.connector.Error as err:
