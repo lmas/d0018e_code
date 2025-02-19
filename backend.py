@@ -1,4 +1,4 @@
-import os, sys, secret
+import os, sys, secrets
 
 from flask import Flask, request, render_template, session, redirect, url_for, flash
 from flask import g as request_globals
