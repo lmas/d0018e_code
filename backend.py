@@ -1,5 +1,5 @@
-import os, sys
-import secrets
+import os, sys, secret
+
 from flask import Flask, request, render_template, session, redirect, url_for, flash
 from flask import g as request_globals
 import mysql.connector
@@ -59,6 +59,7 @@ def get_str_form(name, default=""):
         return request.form.get(name, default, str)
     except ValueError:
         return default
+
 
 ################################################################################
 # DATABASE FUNCTIONS
@@ -134,10 +135,16 @@ def close_db(exception=None):
     if db is not None:
         db.close()
 
+
+# Returns a list of products, with connector entries JOINed in.
+# limit sets the maximum amount of products returned, if possible.
 def get_products(db, limit=10):
     # TODO: gonna need args for group by/order by
     params = {"limit": limit}
     with db.cursor(dictionary=True) as cur:
+        # The two joins basically adds extra values, from the connector table,
+        # to the product tuples. No need to send extra SQL queries to check a
+        # connector's type or gender!
         cur.execute(
             """
             SELECT
@@ -155,12 +162,18 @@ def get_products(db, limit=10):
         rows = cur.fetchall()
     return rows
 
+
+# Tries to insert a new user.
+# Raises an IntegrityError if the email already exists (thanks to email UNIQUE constraint).
 def register_user(db, email, pwd):
     # Use a dictionary, to be able to use it in the query
     params = {"email": email, "password": pwd}
     with db.cursor(dictionary=True) as cur:
         cur.execute("INSERT INTO Users(role, email, password) VALUES(0, %(email)s, %(password)s);", params)
 
+
+# Simulates a login procedure (this is higly insecure! But it's not part of the course)
+# It returns any user data, if the login was successfull.
 def login_user(db, email, pwd):
     param = {"email": email, "password": pwd}
     with db.cursor(dictionary=True) as cur:
@@ -171,8 +184,11 @@ def login_user(db, email, pwd):
     elif row["password"] != pwd:
         raise Exception("bad password")
     return row
+
+
 ################################################################################
 # FLASK APPLICATION AND PAGES
+
 
 @app.route("/")
 def page_home():
@@ -191,11 +207,13 @@ def page_about():
 def page_product(id):
     return "product: " + id
 
+
 @app.route("/register/")
 def page_register():
     return render_template("register.html")
 
-@app.route('/register/', methods=['POST'])
+
+@app.route("/register/", methods=["POST"])
 def page_register_post():
     # Get email and password from the submitted request form
     email = get_str_form("email").lower()
@@ -218,14 +236,16 @@ def page_register_post():
         return "Internal server error"
 
     # All ok, carry on!
-    flash('Registration successful!')
-    return redirect(url_for('page_home'))
+    flash("Registration successful!")
+    return redirect(url_for("page_home"))
 
-@app.route('/login/')
+
+@app.route("/login/")
 def page_login():
     return render_template("login.html")
 
-@app.route('/login/', methods=['POST'])
+
+@app.route("/login/", methods=["POST"])
 def page_login_check():
     # Get email and password from request form
     email = get_str_form("email").lower()
@@ -247,15 +267,16 @@ def page_login_check():
     # All ok!
     session["email"] = email
     session["role"] = user["role"]
-    flash('You were successfully logged in as ' + email)
-    return redirect(url_for('page_home'))
+    flash("You were successfully logged in as " + email)
+    return redirect(url_for("page_home"))
 
-@app.route('/logout/')
+
+@app.route("/logout/")
 def page_logout():
     if session.get("email"):
         session.clear()
-        flash('You were successfully logged out')
-    return redirect(url_for('page_home'))
+        flash("You were successfully logged out")
+    return redirect(url_for("page_home"))
 
 
 ################################################################################
