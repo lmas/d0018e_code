@@ -13,6 +13,10 @@ load_dotenv()
 
 # Create the new flask app to be published
 app = Flask(__name__)
+
+# This secret is used for the built-in flask sessions, how they work:
+# https://flask.palletsprojects.com/en/stable/quickstart/#sessions
+# Here we're randomizing the app.secret_key every time the server is restarted
 app.secret_key = secrets.token_bytes()
 
 ################################################################################
@@ -28,28 +32,33 @@ GENDERS = {0: "male", 1: "female"}
 # a string value stored under the parameter pointed to using "name".
 # If the parameter wasn't found, a "default" value will be returned instead.
 def get_str_param(name, default=""):
-    value = default
     try:
-        # Look the URL parameter in the current web request. For more info, see:
+        # Lookup the URL parameter in the current web request. For more info, see:
         # https://flask.palletsprojects.com/en/stable/api/#flask.Request.args
-        value = str(request.args.get(name))
-    except:
-        pass
+        return request.args.get(name, default, str)
+    except ValueError:
+        # The type conversion failed, return default value
+        return default
     # TODO: could do basic string validation to improve security?
     # But out of scope for this course..
-    return value
 
 
 # Similar function for looking up and returning an integer.
 def get_int_param(name, default=0):
-    value = default
     try:
-        value = int(request.args.get(name))
-    except:
-        pass
-    # TODO: integer validation?
-    return value
+        return request.args.get(name, default, int)
+    except ValueError:
+        # The type conversion failed, return default value
+        return default
 
+
+# This function returns values from a submitted (POST) form, as strings.
+def get_str_form(name, default=""):
+    try:
+        # https://flask.palletsprojects.com/en/stable/api/#flask.Request.form
+        return request.form.get(name, default, str)
+    except ValueError:
+        return default
 
 ################################################################################
 # DATABASE FUNCTIONS
@@ -146,6 +155,22 @@ def get_products(db, limit=10):
         rows = cur.fetchall()
     return rows
 
+def register_user(db, email, pwd):
+    # Use a dictionary, to be able to use it in the query
+    params = {"email": email, "password": pwd}
+    with db.cursor(dictionary=True) as cur:
+        cur.execute("INSERT INTO Users(role, email, password) VALUES(0, %(email)s, %(password)s);", params)
+
+def login_user(db, email, pwd):
+    param = {"email": email, "password": pwd}
+    with db.cursor(dictionary=True) as cur:
+        cur.execute("SELECT password, role FROM Users WHERE email=%(email)s LIMIT 1;", param)
+        row = cur.fetchone()
+    if row is None:
+        raise Exception("bad email")
+    elif row["password"] != pwd:
+        raise Exception("bad password")
+    return row
 ################################################################################
 # FLASK APPLICATION AND PAGES
 
@@ -172,28 +197,27 @@ def page_register():
 
 @app.route('/register/', methods=['POST'])
 def page_register_post():
-    # Get email and password from request form
-    email = str(request.form['email']).lower()
-    pwd = request.form['pwd']
+    # Get email and password from the submitted request form
+    email = get_str_form("email").lower()
+    pwd = get_str_form("pwd")
     db = get_db()
-    # Convert to a dictionary, to be able to use it in the query
-    error = 0
-    param = {"email": email, "password": pwd}
-    with db.cursor(dictionary=True) as cur:
-        try:
-            cur.execute("INSERT INTO Users(role, email, password) VALUES(0, %(email)s, %(password)s);", param)
-        except mysql.connector.IntegrityError as err:
-            print("Error: {}".format(err))
-            error = 1
-        except mysql.connector.Error as err:
-            print("Error: {}".format(err))
-            error = 2
-    db.commit()
-    db.close()
-    if error == 1:
+
+    try:
+        register_user(db, email, pwd)
+        db.commit()
+        db.close()
+    except mysql.connector.IntegrityError as err:
+        # This error is thrown if the email already exists in the db
+        db.close()
+        print("Error inserting new user: ", err)
         return "Bad registration"
-    elif error == 2:
-        return "General error"
+    except mysql.connector.Error as err:
+        # More general, scarier error!
+        db.close()
+        print("Database failure during registration: ", err)
+        return "Internal server error"
+
+    # All ok, carry on!
     flash('Registration successful!')
     return redirect(url_for('page_home'))
 
@@ -201,38 +225,30 @@ def page_register_post():
 def page_login():
     return render_template("login.html")
 
-# Sessions and how they work:
-# https://flask.palletsprojects.com/en/stable/quickstart/#sessions
-# We're randomizing the app.secret_key every time the server is restarted
-
 @app.route('/login/', methods=['POST'])
 def page_login_check():
     # Get email and password from request form
-    email = str(request.form['email']).lower()
-    pwd = request.form['pwd']
-    error = 0
+    email = get_str_form("email").lower()
+    pwd = get_str_form("pwd")
     db = get_db()
-    # Convert to a dictionary, to be able to use it in the query
-    param = {"email": email, "password": pwd}
-    with db.cursor(dictionary=True) as cur:
-        try:
-            cur.execute("SELECT password, role FROM Users WHERE email=%(email)s LIMIT 1;", param)
-            row = cur.fetchone()
-        except mysql.connector.Error as err:
-            print("Error: {}".format(err))
-            error = 1
-    db.close()
-    if row is None:
-        return "Email not present"
-    if error == 1:
-        return "General error"
-    if pwd != row["password"]:
-        return "Wrong password"
-    else:
-        session["email"] = email
-        session["role"] = row["role"]
-        flash('You were successfully logged in as ' + email)
-        return redirect(url_for('page_home'))
+
+    try:
+        user = login_user(db, email, pwd)
+        db.close()
+    except mysql.connector.Error as err:
+        db.close()
+        print("Error while logging in: ", err)
+        return "Bad login"
+    except Exception as err:
+        db.close()
+        print("Bad login: ", err)
+        return "Incorrect email/password"
+
+    # All ok!
+    session["email"] = email
+    session["role"] = user["role"]
+    flash('You were successfully logged in as ' + email)
+    return redirect(url_for('page_home'))
 
 @app.route('/logout/')
 def page_logout():
