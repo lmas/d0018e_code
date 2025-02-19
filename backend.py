@@ -240,7 +240,48 @@ def page_logout():
     flash('You were successfully logged out')
     return redirect(url_for('page_home'))
 
+@app.route('/profile/')
+def page_profile():
+    db = get_db()
+    error = 0
+    # Convert to a dictionary, to be able to use it in the query
+    param = {"email": session.get("email")}
+    with db.cursor(dictionary=True) as cur:
+        try:
+            cur.execute("SELECT iduser,first_name,last_name FROM Users WHERE email=%(email)s LIMIT 1;", param)
+            row = cur.fetchone()
+        except mysql.connector.Error as err:
+            print("Error: {}".format(err))
+            error = 1
+    db.close()
+    if row is None:
+        flash("Please log in before trying to view profile")
+        return redirect(url_for('page_home'))
+    if error == 1:
+        flash("Something went wrong, please try again")
+        return redirect(url_for('page_home'))
+    return render_template("profile.html", userinfo=row)
 
+@app.route('/changeprofile/')
+def page_changeprofile():
+    return render_template("changeprofile.html")
+
+@app.route('/changeprofile/', methods=['POST'])
+def page_changeprofile_post():
+    email = str(request.form['email']).lower()
+    pwd = request.form['pwd']
+    fname = request.form['fName']
+    lname = request.form['lName']
+    error = 0
+    db = get_db()
+    param = {"oldemail": session.get("email"), "newEmail": email, "pass": pwd, "fName": fname, "lName": lname}
+    with db.cursor(dictionary=True) as cur:
+        try:
+            cur.execute("UPDATE Users SET email=%(newEmail)s")
+        except mysql.connector.Error as err:
+            print("Error: {}".format(err))
+            error = 1
+    
 ################################################################################
 
 if __name__ == "__main__":
