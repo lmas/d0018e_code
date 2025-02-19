@@ -170,21 +170,10 @@ def page_product(id):
 
 @app.route("/register/")
 def page_register():
-    db = get_db()
-    # Convert to a dictionary, to be able to use it in the query
-    with db.cursor(dictionary=True) as cur:
-        cur.execute(
-            """
-            SELECT * FROM Users;
-            """
-        )
-        rows = cur.fetchall()
-        print(rows)
-        db.close()
     return render_template("register.html")
 
 @app.route('/register/', methods=['POST'])
-def register_form_post():
+def page_register_post():
     # Get email and password from request form
     email = str(request.form['email']).lower()
     pwd = request.form['pwd']
@@ -194,12 +183,7 @@ def register_form_post():
     param = {"email": email, "password": pwd}
     with db.cursor(dictionary=True) as cur:
         try:
-            cur.execute(
-                """
-                INSERT INTO Users(role, email, password) VALUES(0, %(email)s, %(password)s);
-                """,
-                param
-            )
+            cur.execute("INSERT INTO Users(role, email, password) VALUES(0, %(email)s, %(password)s);", param)
         except mysql.connector.IntegrityError as err:
             print("Error: {}".format(err))
             error = 1
