@@ -1,6 +1,6 @@
 import os, sys
-
-from flask import Flask, request, render_template
+import secrets
+from flask import Flask, request, render_template, session, redirect, url_for, flash
 from flask import g as request_globals
 import mysql.connector
 
@@ -13,6 +13,7 @@ load_dotenv()
 
 # Create the new flask app to be published
 app = Flask(__name__)
+app.secret_key = secrets.token_bytes()
 
 ################################################################################
 # GLOBAL HELPER FUNCTIONS (these should be at the top of the file)
@@ -124,7 +125,6 @@ def close_db(exception=None):
     if db is not None:
         db.close()
 
-
 def get_products(db, limit=10):
     # TODO: gonna need args for group by/order by
     params = {"limit": limit}
@@ -146,10 +146,8 @@ def get_products(db, limit=10):
         rows = cur.fetchall()
     return rows
 
-
 ################################################################################
 # FLASK APPLICATION AND PAGES
-
 
 @app.route("/")
 def page_home():
@@ -196,7 +194,51 @@ def page_register_post():
         return "Bad registration"
     elif error == 2:
         return "General error"
-    return "Registration done, please login"
+    flash('Registration successful!')
+    return redirect(url_for('page_home'))
+
+@app.route('/login/')
+def page_login():
+    return render_template("login.html")
+
+# Sessions and how they work:
+# https://flask.palletsprojects.com/en/stable/quickstart/#sessions
+# We're randomizing the app.secret_key every time the server is restarted
+
+@app.route('/login/', methods=['POST'])
+def page_login_check():
+    # Get email and password from request form
+    email = str(request.form['email']).lower()
+    pwd = request.form['pwd']
+    error = 0
+    db = get_db()
+    # Convert to a dictionary, to be able to use it in the query
+    param = {"email": email, "password": pwd}
+    with db.cursor(dictionary=True) as cur:
+        try:
+            cur.execute("SELECT iduser,password FROM Users WHERE email=%(email)s LIMIT 1;", param)
+            row = cur.fetchone()
+        except mysql.connector.Error as err:
+            print("Error: {}".format(err))
+            error = 1
+    db.close()
+    if row is None:
+        return "Email not present"
+    if error == 1:
+        return "General error"
+    if pwd != row["password"]:
+        return "Wrong password"
+    else:
+        session["id"] = row["iduser"]
+        session["email"] = email
+        flash('You were successfully logged in as ' + email)
+        return redirect(url_for('page_home'))
+    
+@app.route('/logout/')
+def page_logout():
+    session.clear()
+    flash('You were successfully logged out')
+    return redirect(url_for('page_home'))
 
 
 ################################################################################

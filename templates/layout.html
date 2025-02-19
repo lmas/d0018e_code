@@ -18,13 +18,29 @@
 				<a href="/products">Products</a>
 				<hr>
 				<!--TODO: Add Register/login/logout/profile/add/del products links-->
-				<a href="/login">Login</a>
-				<a href="/register">Register</a>
+				{% if session["email"] %}
+					<a href="/profile">Profile</a>
+					<a href="/logout">Logout</a>
+				{% else %}
+					<a href="/login">Login</a>
+					<a href="/register">Register</a>
+				{% endif %}
 				<hr>
 				<a href="/about">About us</a>
 			</aside>
 
 			<main id="content">
+				<!-- Display flash messages if there are any -->
+				{% with messages = get_flashed_messages() %}
+					{% if messages %}
+						<ul class=flashes>
+							{% for message in messages %}
+								<li>{{ message }}</li>
+							{% endfor %}
+						</ul>
+					{% endif %}
+				{% endwith %}
+
 				{% block content %}{% endblock %}
 			</main>
 		</div>
