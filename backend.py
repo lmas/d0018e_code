@@ -340,8 +340,7 @@ def page_changeprofile_post():
     error = 0
     # Connect to database, make sure no fields are empty and send the query
     db = get_db()
-    row = get_user(db, session["email"])
-    #db.close()
+    row = get_user(db, session.get("email"))
     if email == "":
        email = session["email"]
     if pwd == "":
