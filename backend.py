@@ -137,8 +137,8 @@ def get_products(db, limit=10):
                 c2.gender as "c2gender", c2.type as "c2type"
             FROM
                 (SELECT * FROM Products LIMIT %(limit)s) p
-                LEFT JOIN Connectors c1 ON p.connector1 = c1.id
-                LEFT JOIN Connectors c2 ON p.connector2 = c2.id
+                JOIN Connectors c1 ON p.idconnector1 = c1.idconnector
+                JOIN Connectors c2 ON p.idconnector2 = c2.idconnector
             ;
             """,
             params,
@@ -213,7 +213,7 @@ def register_form_post():
     elif error == 2:
         return "General error"
     return "Registration done, please login"
-    
+
 
 ################################################################################
 
