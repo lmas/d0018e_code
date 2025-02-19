@@ -15,18 +15,29 @@
 		<div id="page">
 			<aside id="menu">
 				<a href="/">Home</a>
+				<a href="/about">About us</a>
 				<a href="/products">Products</a>
 				<hr>
-				<!--TODO: Add Register/login/logout/profile/add/del products links-->
-				{% if session["email"] %}
+
+				<!-- User menu -->
+				{% if session.get("email") %}
+					<p>User: {{session.get("email")}}</p>
 					<a href="/profile">Profile</a>
 					<a href="/logout">Logout</a>
 				{% else %}
 					<a href="/login">Login</a>
 					<a href="/register">Register</a>
 				{% endif %}
-				<hr>
-				<a href="/about">About us</a>
+
+				<!-- Super secret admin menu -->
+				{% if session.get("role") == 1 %}
+					<hr>
+					<p>Administration</p>
+					<a href="/orders">Order history</a>
+					<a href="/products/new">Add product</a>
+					<a href="/products/remove">Remove product</a>
+				{% endif %}
+
 			</aside>
 
 			<main id="content">

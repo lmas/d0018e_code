@@ -38,7 +38,7 @@ footer {
 }
 
 #menu {
-	width: 100px;
+	width: 200px;
 	padding: 50px;
 	display: flex;
 	flex-direction: column;

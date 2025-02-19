@@ -216,7 +216,7 @@ def page_login_check():
     param = {"email": email, "password": pwd}
     with db.cursor(dictionary=True) as cur:
         try:
-            cur.execute("SELECT iduser,password FROM Users WHERE email=%(email)s LIMIT 1;", param)
+            cur.execute("SELECT password, role FROM Users WHERE email=%(email)s LIMIT 1;", param)
             row = cur.fetchone()
         except mysql.connector.Error as err:
             print("Error: {}".format(err))
@@ -229,15 +229,16 @@ def page_login_check():
     if pwd != row["password"]:
         return "Wrong password"
     else:
-        session["id"] = row["iduser"]
         session["email"] = email
+        session["role"] = row["role"]
         flash('You were successfully logged in as ' + email)
         return redirect(url_for('page_home'))
-    
+
 @app.route('/logout/')
 def page_logout():
-    session.clear()
-    flash('You were successfully logged out')
+    if session.get("email"):
+        session.clear()
+        flash('You were successfully logged out')
     return redirect(url_for('page_home'))
 
 
