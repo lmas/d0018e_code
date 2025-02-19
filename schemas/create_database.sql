@@ -3,7 +3,7 @@
 -- backend starts up. This allows us to keep a consistent state while testing!
 -- WARN: These tables MUST be dropped in reverse order of creation (due to relations)!
 
-DROP TABLE IF EXISTS CustomerReviews;
+DROP TABLE IF EXISTS Reviews;
 DROP TABLE IF EXISTS Orders;
 DROP TABLE IF EXISTS ShoppingCarts;
 DROP TABLE IF EXISTS Products;
@@ -100,7 +100,7 @@ CREATE TABLE Orders (
 
 -- Allows customers to rate and comment a product, which should be shown on the
 -- product page.
-CREATE TABLE CustomerReviews (
+CREATE TABLE Reviews (
 	iduser INT NOT NULL,
 	idproduct INT NOT NULL,
 	rating INT NOT NULL,
