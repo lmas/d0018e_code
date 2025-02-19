@@ -1,4 +1,4 @@
-import os, sys, secret
+import os, sys, secrets
 
 from flask import Flask, request, render_template, session, redirect, url_for, flash
 from flask import g as request_globals
@@ -177,7 +177,7 @@ def register_user(db, email, pwd):
 def login_user(db, email, pwd):
     param = {"email": email, "password": pwd}
     with db.cursor(dictionary=True) as cur:
-        cur.execute("SELECT password, role FROM Users WHERE email=%(email)s LIMIT 1;", param)
+        cur.execute("""SELECT password, role FROM Users WHERE email=%(email)s LIMIT 1;""", param)
         row = cur.fetchone()
     if row is None:
         raise Exception("bad email")
@@ -185,6 +185,14 @@ def login_user(db, email, pwd):
         raise Exception("bad password")
     return row
 
+def get_user(db, email):
+    param = {"email": email}
+    with db.cursor(dictionary=True) as cur:
+        cur.execute("""SELECT password, first_name, last_name FROM Users WHERE email=%(email)s LIMIT 1;""", param)
+        row = cur.fetchone()
+    if row is None:
+        raise Exception("bad email")
+    return row
 
 ################################################################################
 # FLASK APPLICATION AND PAGES
@@ -268,7 +276,7 @@ def page_login_check():
     session["email"] = email
     session["role"] = user["role"]
     flash("You were successfully logged in as " + email)
-    return redirect(url_for("page_home"))
+    return redirect(url_for("page_profile"))
 
 
 @app.route("/logout/")
@@ -286,7 +294,7 @@ def page_profile():
     param = {"email": session.get("email")}
     with db.cursor(dictionary=True) as cur:
         try:
-            cur.execute("SELECT iduser,first_name,last_name FROM Users WHERE email=%(email)s LIMIT 1;", param)
+            cur.execute("""SELECT iduser,first_name,last_name FROM Users WHERE email=%(email)s LIMIT 1;""", param)
             row = cur.fetchone()
         except mysql.connector.Error as err:
             print("Error: {}".format(err))
@@ -302,23 +310,76 @@ def page_profile():
 
 @app.route('/changeprofile/')
 def page_changeprofile():
+    db = get_db()
+    error = 0
+    # Convert to a dictionary, to be able to use it in the query
+    param = {"email": session.get("email")}
+    with db.cursor(dictionary=True) as cur:
+        try:
+            cur.execute("""SELECT iduser,first_name,last_name FROM Users WHERE email=%(email)s LIMIT 1;""", param)
+            row = cur.fetchone()
+        except mysql.connector.Error as err:
+            print("Error: {}".format(err))
+            error = 1
+    db.close()
+    if row is None:
+        flash("Please log in before trying to change your profile")
+        return redirect(url_for('page_home'))
+    if error == 1:
+        flash("Something went wrong, please try again")
+        return redirect(url_for('page_home'))
     return render_template("changeprofile.html")
 
 @app.route('/changeprofile/', methods=['POST'])
 def page_changeprofile_post():
-    email = str(request.form['email']).lower()
-    pwd = request.form['pwd']
-    fname = request.form['fName']
-    lname = request.form['lName']
+    # Get all values from the form
+    email = get_str_form("email").lower()
+    pwd = get_str_form("pwd")
+    fname = get_str_form('fName')
+    lname = get_str_form('lName')
     error = 0
+    # Connect to database, make sure no fields are empty and send the query
     db = get_db()
-    param = {"oldemail": session.get("email"), "newEmail": email, "pass": pwd, "fName": fname, "lName": lname}
+    row = get_user(db, session["email"])
+    #db.close()
+    if email == "":
+       email = session["email"]
+    if pwd == "":
+        pwd = row["password"]
+    if fname == "":
+        fname = row["first_name"]
+    if lname == "":
+        lname = row["last_name"]
+    param = {"oldEmail": session.get("email"), "email": email, "password": pwd, "first_name": fname, "last_name": lname}
     with db.cursor(dictionary=True) as cur:
         try:
-            cur.execute("UPDATE Users SET email=%(newEmail)s")
+            cur.execute(
+                """
+                UPDATE
+                    Users
+                SET
+                    email=%(email)s,
+                    password=%(password)s,
+                    first_name=%(first_name)s,
+                    last_name=%(last_name)s
+                WHERE
+                    email=%(oldEmail)s;
+                """
+                ,
+                param
+            )
+            db.commit()
+            db.close()
         except mysql.connector.Error as err:
+            db.close()
             print("Error: {}".format(err))
             error = 1
+    if error == 1:
+        flash("Something went wrong, please try again")
+        return redirect(url_for('page_home'))
+    if session.get("email") != email:
+        session["email"] = email
+    return redirect(url_for('page_profile'))
     
 ################################################################################
 
