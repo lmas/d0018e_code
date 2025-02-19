@@ -116,7 +116,7 @@ CREATE TABLE Reviews (
 -- Adds some example tuples to the tables.
 
 INSERT INTO Users (role, email, password, first_name, last_name) VALUES
-(1, "admin@localhost", "passw", "Adam", "Adminson"),
+(1, "admin@localhost", "pass", "Adam", "Adminson"),
 (0, "humle@home", "humle", "Humle", "Son"),
 (0, "dumle@work", "dumle", "Dumle", "Dottir");
 
