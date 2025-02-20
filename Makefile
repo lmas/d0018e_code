@@ -1,16 +1,16 @@
 # Setup a new python env (if not existing)
 env:
-	test -d .venv || python3 -m venv .venv
+	test -d .venv || python3.11 -m venv .venv
 
 # Install pip and requirements
 deps:
-	. .venv/bin/activate && python3 -m pip install --upgrade pip
-	. .venv/bin/activate && python3 -m pip install -r requirements.txt
+	. .venv/bin/activate && python3.11 -m pip install --upgrade pip
+	. .venv/bin/activate && python3.11 -m pip install -r requirements.txt
 
 # Run webserver locally
 run:
-	# . .venv/bin/activate && python3 example/app.py
-	. .venv/bin/activate && python3 backend.py
+	# . .venv/bin/activate && python3.11 example/app.py
+	. .venv/bin/activate && python3.11 backend.py
 
 # Run tests and save coverage stats
 test:
