@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block title %}Product{% endblock %}
+{% block content%}
+
+
+
+<h1>
+    {{product.length}}m {{product.color}} USB {{product.standard}} cable
+    ({{product.c1type}} {{genders[product.c1gender]}} to
+    {{product.c2type}} {{genders[product.c2gender]}})
+</h1>
+<ul>
+
+
+	<li> 
+        Price:{{product.price}}
+        
+        
+	</li>
+
+</ul>
+
+{% endblock %}

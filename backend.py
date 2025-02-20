@@ -185,7 +185,29 @@ def login_user(db, email, pwd):
         raise Exception("bad password")
     return row
 
-
+#get a single product
+#
+def get_product(db, id):
+    param = {"idproduct": id}
+    with db.cursor(dictionary=True) as cur:
+        #cur.execute("SELECT * FROM Products WHERE idproduct =%(idproduct)s", param)
+        cur.execute( """
+            SELECT
+                p.*,
+                c1.gender as "c1gender", c1.type as "c1type",
+                c2.gender as "c2gender", c2.type as "c2type"
+            FROM
+                (SELECT * FROM Products WHERE idproduct = %(idproduct)s) p
+                JOIN Connectors c1 ON p.idconnector1 = c1.idconnector
+                JOIN Connectors c2 ON p.idconnector2 = c2.idconnector
+            ;
+            """,
+            param)
+        row = cur.fetchone()
+    if id is None:
+        raise Exception("bad id")
+    
+    return row
 ################################################################################
 # FLASK APPLICATION AND PAGES
 
@@ -205,8 +227,18 @@ def page_about():
 
 @app.route("/product/<id>")
 def page_product(id):
-    return "product: " + id
+    db = get_db()
+    rows = get_product(db, id)
+    db.close()
+    return render_template("product.html", product=rows, genders=GENDERS)
 
+@app.route("/products/")
+def page_products():
+    
+    db = get_db()
+    rows = get_products(db, limit=200)
+    db.close()
+    return render_template("products.html", products=rows, genders=GENDERS)
 
 @app.route("/register/")
 def page_register():
