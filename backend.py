@@ -60,17 +60,20 @@ def get_str_form(name, default=""):
     except ValueError:
         return default
 
+
 def get_int_form(name, default=""):
     try:
         return request.form.get(name, default, int)
     except ValueError:
         return default
-    
+
+
 def get_float_form(name, default=""):
     try:
         return request.form.get(name, default, float)
     except ValueError:
         return default
+
 
 ################################################################################
 # DATABASE FUNCTIONS
@@ -167,7 +170,7 @@ def get_products(db, limit=10):
                 JOIN Connectors c1 ON p.idconnector1 = c1.idconnector
                 JOIN Connectors c2 ON p.idconnector2 = c2.idconnector
             ;
-            """,
+        """,
             params,
         )
         rows = cur.fetchall()
@@ -183,22 +186,7 @@ def register_user(db, email, pwd):
         cur.execute("INSERT INTO Users(role, email, password) VALUES(0, %(email)s, %(password)s);", params)
 
 
-# Simulates a login procedure (this is higly insecure! But it's not part of the course)
-# It returns any user data, if the login was successfull.
-def login_user(db, email, pwd):
-    param = {"email": email, "password": pwd}
-    with db.cursor(dictionary=True) as cur:
-        cur.execute("""SELECT password, role FROM Users WHERE email=%(email)s LIMIT 1;""", param)
-        row = cur.fetchone()
-    if row is None:
-        raise Exception("bad email")
-    elif row["password"] != pwd:
-        raise Exception("bad password")
-    return row
-
-
 #get a single product
-#
 def get_product(db, id):
     param = {"idproduct": id}
     with db.cursor(dictionary=True) as cur:
@@ -218,25 +206,50 @@ def get_product(db, id):
         row = cur.fetchone()
     if id is None:
         raise Exception("bad id")
-    
+
     return row
+
 
 def get_user(db, email):
     param = {"email": email}
     with db.cursor(dictionary=True) as cur:
-        cur.execute("""SELECT password, first_name, last_name FROM Users WHERE email=%(email)s LIMIT 1;""", param)
+        cur.execute("SELECT * FROM Users WHERE email=%(email)s LIMIT 1;", param)
         row = cur.fetchone()
     if row is None:
-        raise Exception("bad email")
+        raise Exception("bad user")
     return row
+
+
+def update_user(db, param):
+    with db.cursor(dictionary=True) as cur:
+        cur.execute(
+            """
+            UPDATE Users
+            SET email=%(email)s, password=%(password)s, first_name=%(first_name)s, last_name=%(last_name)s
+            WHERE email=%(oldEmail)s;
+        """,
+            param,
+        )
+
 
 def get_connectors(db):
     with db.cursor(dictionary=True) as cur:
-        cur.execute("""SELECT * FROM Connectors""")
+        cur.execute("SELECT * FROM Connectors")
         rows = cur.fetchall()
     if rows is None:
         raise Exception("Connector table empty")
     return rows
+
+
+def add_product(db, param):
+    with db.cursor(dictionary=True) as cur:
+        cur.execute(
+            """
+            INSERT INTO Products(price, in_stock, standard, length, color, idconnector1, idconnector2)
+            VALUES( %(price)s, %(in_stock)s, %(standard)s, %(length)s, %(color)s, %(idcon1)s, %(idcon2)s );
+        """,
+            param,
+        )
 
 
 ################################################################################
@@ -265,18 +278,18 @@ def page_product(id):
 
 @app.route("/products/")
 def page_products():
-    
+
     db = get_db()
     rows = get_products(db, limit=200)
     db.close()
     return render_template("products.html", products=rows, genders=GENDERS)
 
-@app.route("/register/")
+@app.route("/register")
 def page_register():
     return render_template("register.html")
 
 
-@app.route("/register/", methods=["POST"])
+@app.route("/register", methods=["POST"])
 def page_register_post():
     # Get email and password from the submitted request form
     email = get_str_form("email").lower()
@@ -303,20 +316,20 @@ def page_register_post():
     return redirect(url_for("page_home"))
 
 
-@app.route("/login/")
+@app.route("/login")
 def page_login():
     return render_template("login.html")
 
 
-@app.route("/login/", methods=["POST"])
-def page_login_check():
+@app.route("/login", methods=["POST"])
+def page_login_post():
     # Get email and password from request form
     email = get_str_form("email").lower()
     pwd = get_str_form("pwd")
     db = get_db()
 
     try:
-        user = login_user(db, email, pwd)
+        user = get_user(db, email)
         db.close()
     except mysql.connector.Error as err:
         db.close()
@@ -324,6 +337,9 @@ def page_login_check():
         return "Bad login"
     except Exception as err:
         db.close()
+        print("Bad login: ", err)
+        return "Incorrect email/password"
+    if user["password"] != pwd:
         print("Bad login: ", err)
         return "Incorrect email/password"
 
@@ -334,115 +350,93 @@ def page_login_check():
     return redirect(url_for("page_profile"))
 
 
-@app.route("/logout/")
+@app.route("/logout")
 def page_logout():
     if session.get("email"):
         session.clear()
         flash("You were successfully logged out")
     return redirect(url_for("page_home"))
 
-@app.route('/profile/')
+
+@app.route("/profile")
 def page_profile():
-    db = get_db()
-    error = 0
-    # Convert to a dictionary, to be able to use it in the query
-    param = {"email": session.get("email")}
-    with db.cursor(dictionary=True) as cur:
-        try:
-            cur.execute("""SELECT iduser,first_name,last_name FROM Users WHERE email=%(email)s LIMIT 1;""", param)
-            row = cur.fetchone()
-        except mysql.connector.Error as err:
-            print("Error: {}".format(err))
-            error = 1
-    db.close()
-    if row is None:
+    if session.get("email") is None:
         flash("Please log in before trying to view profile")
-        return redirect(url_for('page_home'))
-    if error == 1:
-        flash("Something went wrong, please try again")
-        return redirect(url_for('page_home'))
-    return render_template("profile.html", userinfo=row)
+        return redirect(url_for("page_home"))
 
-@app.route('/changeprofile/')
-def page_changeprofile():
     db = get_db()
-    error = 0
-    # Convert to a dictionary, to be able to use it in the query
-    param = {"email": session.get("email")}
-    with db.cursor(dictionary=True) as cur:
-        try:
-            cur.execute("""SELECT iduser,first_name,last_name FROM Users WHERE email=%(email)s LIMIT 1;""", param)
-            row = cur.fetchone()
-        except mysql.connector.Error as err:
-            print("Error: {}".format(err))
-            error = 1
-    db.close()
-    if row is None:
-        flash("Please log in before trying to change your profile")
-        return redirect(url_for('page_home'))
-    if error == 1:
+    try:
+        user = get_user(db, session.get("email"))
+        db.close()
+    # Technically, no errors should be thrown here as the user is already logged in.
+    except Exception as err:
+        db.close()
+        print("Error getting user profile: ", err)
         flash("Something went wrong, please try again")
-        return redirect(url_for('page_home'))
-    return render_template("changeprofile.html")
+        return redirect(url_for("page_home"))
 
-@app.route('/changeprofile/', methods=['POST'])
-def page_changeprofile_post():
+    return render_template("profile.html", userinfo=user)
+
+
+@app.route("/profile/update")
+def page_profile_update():
+    if session.get("email") is None:
+        flash("Please log in before trying to change your profile")
+        return redirect(url_for("page_home"))
+
+    db = get_db()
+    try:
+        user = get_user(db, session.get("email"))
+        db.close()
+    # Technically, no errors should be thrown here as the user is already logged in.
+    except Exception as err:
+        db.close()
+        print("Error getting user profile: ", err)
+        flash("Something went wrong, please try again")
+        return redirect(url_for("page_home"))
+
+    return render_template("changeprofile.html", userinfo=user)
+
+
+@app.route("/profile/update", methods=["POST"])
+def page_profile_update_post():
+    if session.get("email") is None:
+        flash("Please log in before trying to change your profile")
+        return redirect(url_for("page_home"))
+
     # Get all values from the form
-    email = get_str_form("email").lower()
-    pwd = get_str_form("pwd")
-    fname = get_str_form('fName')
-    lname = get_str_form('lName')
-    error = 0
+    param = {
+        "oldEmail": session.get("email"),
+        "email": get_str_form("email").lower(),
+        "password": get_str_form("pwd"),
+        "first_name": get_str_form("fName"),
+        "last_name": get_str_form("lName"),
+    }
     # Connect to database, make sure no fields are empty and send the query
     db = get_db()
-    #This could probably be done better, will look at it at a later date
-    row = get_user(db, session.get("email"))
-    if email == "":
-       email = session["email"]
-    if pwd == "":
-        pwd = row["password"]
-    if fname == "":
-        fname = row["first_name"]
-    if lname == "":
-        lname = row["last_name"]
-    param = {"oldEmail": session.get("email"), "email": email, "password": pwd, "first_name": fname, "last_name": lname}
-    with db.cursor(dictionary=True) as cur:
-        try:
-            cur.execute(
-                """
-                UPDATE
-                    Users
-                SET
-                    email=%(email)s,
-                    password=%(password)s,
-                    first_name=%(first_name)s,
-                    last_name=%(last_name)s
-                WHERE
-                    email=%(oldEmail)s;
-                """
-                ,
-                param
-            )
-            # DONT FORGET TO COMMIT THE UPDATE/INSERT
-            db.commit()
-            db.close()
-        except mysql.connector.Error as err:
-            db.close()
-            print("Error: {}".format(err))
-            error = 1
-    if error == 1:
+    try:
+        update_user(db, param)
+        # DONT FORGET TO COMMIT THE UPDATE/INSERT
+        db.commit()
+        db.close()
+    except mysql.connector.Error as err:
+        db.close()
+        print("Error: {}".format(err))
         flash("Something went wrong, please try again")
-        return redirect(url_for('page_home'))
-    if session.get("email") != email:
-        session["email"] = email
-    return redirect(url_for('page_profile'))
-    
-@app.route('/products/new/')
-def page_addproduct():
+        return redirect(url_for("page_home"))
+
+    # Retain the new updated email in current session
+    session["email"] = param["email"]
+    return redirect(url_for("page_profile"))
+
+
+@app.route("/products/new")
+def page_products_new():
     # Only reachable if you're logged in, and has admin role
     if session.get("role") != 1:
         flash("Insufficient permissions")
-        return redirect(url_for('page_home'))
+        return redirect(url_for("page_home"))
+
     # Get all connectors and handle errors
     db = get_db()
     try:
@@ -452,42 +446,41 @@ def page_addproduct():
         db.close()
         print("Error: {}".format(err))
         flash("Error occured while getting connectors")
-        return redirect(url_for('page_addproduct')) 
+        return redirect(url_for("page_products_new"))
     return render_template("addproduct.html", connectors=conn)
 
-@app.route('/products/new/', methods=['POST'])
-def page_addproduct_post():
-    # Get all values from the form
-    price = get_int_form("price")
-    in_stock = get_int_form("in_stock")
-    standard = get_float_form("standard")
-    length = get_float_form("length")
-    color = get_str_form("color").lower()
-    idcon1 = get_int_form("idcon1")
-    idcon2 = get_int_form("idcon2")
+
+@app.route("/products/new", methods=["POST"])
+def page_products_new_post():
+    if session.get("role") != 1:
+        flash("Insufficient permissions")
+        return redirect(url_for("page_home"))
+
     # Place values in a dict so it can be used in the sql query
-    params = {"price": price, "in_stock": in_stock, "standard": standard, "length": length, "color": color, "idcon1": idcon1, "idcon2": idcon2}
+    param = {
+        "price": get_int_form("price"),
+        "in_stock": get_int_form("in_stock"),
+        "standard": get_float_form("standard"),
+        "length": get_float_form("length"),
+        "color": get_str_form("color").lower(),
+        "idcon1": get_int_form("idcon1"),
+        "idcon2": get_int_form("idcon2"),
+    }
     db = get_db()
-    with db.cursor(dictionary=True) as cur:
-        try:
-            cur.execute(
-                """
-                INSERT INTO Products(price, in_stock, standard, length, color, idconnector1, idconnector2)
-                VALUES(%(price)s, %(in_stock)s, %(standard)s, %(length)s, %(color)s, %(idcon1)s, %(idcon2)s);
-                """
-                ,
-                params
-            )
-            # DONT FORGET TO COMMIT THE UPDATE/INSERT
-            db.commit()
-            db.close()
-        except mysql.connector.Error as err:
-            db.close()
-            print("Error: {}".format(err))
-            flash("Error while inserting product in database")
-            return redirect(url_for('page_addproduct'))
+    try:
+        add_product(db, param)
+        # DONT FORGET TO COMMIT THE UPDATE/INSERT
+        db.commit()
+        db.close()
+    except mysql.connector.Error as err:
+        db.close()
+        print("Error: {}".format(err))
+        flash("Error while inserting product in database")
+        return redirect(url_for("page_products_new"))
+
     flash("Successfully added product")
-    return redirect(url_for('page_addproduct'))
+    return redirect(url_for("page_products_new"))
+
 
 ################################################################################
 
