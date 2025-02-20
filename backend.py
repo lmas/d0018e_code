@@ -60,6 +60,17 @@ def get_str_form(name, default=""):
     except ValueError:
         return default
 
+def get_int_form(name, default=""):
+    try:
+        return request.form.get(name, default, int)
+    except ValueError:
+        return default
+    
+def get_float_form(name, default=""):
+    try:
+        return request.form.get(name, default, float)
+    except ValueError:
+        return default
 
 ################################################################################
 # DATABASE FUNCTIONS
@@ -193,6 +204,14 @@ def get_user(db, email):
     if row is None:
         raise Exception("bad email")
     return row
+
+def get_connectors(db):
+    with db.cursor(dictionary=True) as cur:
+        cur.execute("""SELECT * FROM Connectors""")
+        rows = cur.fetchall()
+    if rows is None:
+        raise Exception("Connector table empty")
+    return rows
 
 ################################################################################
 # FLASK APPLICATION AND PAGES
@@ -382,6 +401,58 @@ def page_changeprofile_post():
         session["email"] = email
     return redirect(url_for('page_profile'))
     
+@app.route('/products/new/')
+def page_addproduct():
+    # Only reachable if you're logged in, and has admin role
+    if session.get("role") != 1:
+        flash("Insufficient permissions")
+        return redirect(url_for('page_home'))
+    # Get all connectors and handle errors
+    db = get_db()
+    try:
+        conn = get_connectors(db)
+        db.close()
+    except mysql.connector.Error as err:
+        db.close()
+        print("Error: {}".format(err))
+        flash("Error occured while getting connectors")
+        return redirect(url_for('page_addproduct')) 
+    return render_template("addproduct.html", connectors=conn)
+
+@app.route('/products/new/', methods=['POST'])
+def page_addproduct_post():
+    # Get all values from the form
+    price = get_int_form("price")
+    in_stock = get_int_form("in_stock")
+    standard = get_float_form("standard")
+    length = get_float_form("length")
+    color = get_str_form("color").lower()
+    idcon1 = get_int_form("idcon1")
+    idcon2 = get_int_form("idcon2")
+    # Place values in a dict so it can be used in the sql query
+    params = {"price": price, "in_stock": in_stock, "standard": standard, "length": length, "color": color, "idcon1": idcon1, "idcon2": idcon2}
+    db = get_db()
+    with db.cursor(dictionary=True) as cur:
+        try:
+            cur.execute(
+                """
+                INSERT INTO Products(price, in_stock, standard, length, color, idconnector1, idconnector2)
+                VALUES(%(price)s, %(in_stock)s, %(standard)s, %(length)s, %(color)s, %(idcon1)s, %(idcon2)s);
+                """
+                ,
+                params
+            )
+            # DONT FORGET TO COMMIT THE UPDATE/INSERT
+            db.commit()
+            db.close()
+        except mysql.connector.Error as err:
+            db.close()
+            print("Error: {}".format(err))
+            flash("Error while inserting product in database")
+            return redirect(url_for('page_addproduct'))
+    flash("Successfully added product")
+    return redirect(url_for('page_addproduct'))
+
 ################################################################################
 
 if __name__ == "__main__":

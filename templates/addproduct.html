@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% block title %}Add Product{% endblock %}
+{% block content%}
+
+<h1>Add product</h1>
+
+<p>Select product options:</p>
+<form method="POST">
+        <label for="price">Price:</label>
+        <input type="number" id="price" name="price" required><br>
+        <label for="in_stock">In stock:</label>
+        <input type="number" id="in_stock" name="in_stock" required><br>
+        <label for="length">Length:</label>
+        <input type="number" id="length" name="length" step="0.1" required><br>
+        <label for="color">Color:</label>
+        <input type="text" id="color" name="color" required><br>
+        <p>Standard:</p>
+        <select name="standard" id="standard" required>
+                <option value="1.0">USB 1.0</option>
+                <option value="1.1">USB 1.1</option>
+                <option value="2.0">USB 2.0</option>
+                <option value="3.0">USB 3.0</option>
+                <option value="3.1">USB 3.1</option>
+                <option value="3.2">USB 3.2</option>
+                <option value="4.0">USB4</option>
+        </select><br>
+        <p>Connectors:</p>
+        <select name="idcon1" id="idcon1" required>
+                <optgroup label="Male">
+                        {% for connector in connectors %}
+                                {% if connector["gender"] == 1 %}
+                                        <option value="{{ connector['idconnector'] }}">{{ connector["type"] }}</option>
+                                {% endif %}
+                        {% endfor %}
+                </optgroup>
+                <optgroup label="Female">
+                        {% for connector in connectors %}
+                                {% if connector["gender"] == 0 %}
+                                        <option value="{{ connector['idconnector'] }}">{{ connector["type"] }}</option>
+                                {% endif %}
+                        {% endfor %}
+                </optgroup>
+        </select>
+        <select name="idcon2" id="idcon2" required>
+                <optgroup label="Male">
+                        {% for connector in connectors %}
+                                {% if connector["gender"] == 1 %}
+                                        <option value="{{ connector['idconnector'] }}">{{ connector["type"] }}</option>
+                                {% endif %}
+                        {% endfor %}
+                </optgroup>
+                <optgroup label="Female">
+                        {% for connector in connectors %}
+                                {% if connector["gender"] == 0 %}
+                                        <option value="{{ connector['idconnector'] }}">{{ connector["type"] }}</option>
+                                {% endif %}
+                        {% endfor %}
+                </optgroup>
+        </select><br><br>
+        <input type="submit" value="Submit">
+        <button type="button"><a href="/profile">Back</a></button>
+</form>
+
+
+{% endblock %}
