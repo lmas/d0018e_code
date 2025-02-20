@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block title %}Profile{% endblock %}
+{% block content%}
+
+<div class="banner">
+	huuge product ad...
+</div>
+
+<h1>Profile</h1>
+<ul> <!-- {'iduser': 2, 'first_name': 'Humle', 'last_name': 'Son'}  -->
+        <p>Userid: {{ userinfo["iduser"] }}</p>
+        <p>Email: {{ session["email"] }}</p>
+        <p>First name: {{ userinfo["first_name"] }}</p>
+        <p>Last name: {{ userinfo["last_name"] }}</p>
+        <button type="button"><a href="/changeprofile">Change</a></button>
+        <button type="button"><a href="/">Back</a></button>
+</ul>
+
+{% endblock %}
