@@ -150,33 +150,6 @@ def close_db(exception=None):
         db.close()
 
 
-# Returns a list of products, with connector entries JOINed in.
-# limit sets the maximum amount of products returned, if possible.
-def get_products(db, limit=10):
-    # TODO: gonna need args for group by/order by
-    params = {"limit": limit}
-    with db.cursor(dictionary=True) as cur:
-        # The two joins basically adds extra values, from the connector table,
-        # to the product tuples. No need to send extra SQL queries to check a
-        # connector's type or gender!
-        cur.execute(
-            """
-            SELECT
-                p.*,
-                c1.gender as "c1gender", c1.type as "c1type",
-                c2.gender as "c2gender", c2.type as "c2type"
-            FROM
-                (SELECT * FROM Products LIMIT %(limit)s) p
-                JOIN Connectors c1 ON p.idconnector1 = c1.idconnector
-                JOIN Connectors c2 ON p.idconnector2 = c2.idconnector
-            ;
-        """,
-            params,
-        )
-        rows = cur.fetchall()
-    return rows
-
-
 # Tries to insert a new user.
 # Raises an IntegrityError if the email already exists (thanks to email UNIQUE constraint).
 def register_user(db, email, pwd):
@@ -184,30 +157,6 @@ def register_user(db, email, pwd):
     params = {"email": email, "password": pwd}
     with db.cursor(dictionary=True) as cur:
         cur.execute("INSERT INTO Users(role, email, password) VALUES(0, %(email)s, %(password)s);", params)
-
-
-#get a single product
-def get_product(db, id):
-    param = {"idproduct": id}
-    with db.cursor(dictionary=True) as cur:
-        #cur.execute("SELECT * FROM Products WHERE idproduct =%(idproduct)s", param)
-        cur.execute( """
-            SELECT
-                p.*,
-                c1.gender as "c1gender", c1.type as "c1type",
-                c2.gender as "c2gender", c2.type as "c2type"
-            FROM
-                (SELECT * FROM Products WHERE idproduct = %(idproduct)s) p
-                JOIN Connectors c1 ON p.idconnector1 = c1.idconnector
-                JOIN Connectors c2 ON p.idconnector2 = c2.idconnector
-            ;
-            """,
-            param)
-        row = cur.fetchone()
-    if id is None:
-        raise Exception("bad id")
-
-    return row
 
 
 def get_user(db, email):
@@ -230,6 +179,59 @@ def update_user(db, param):
         """,
             param,
         )
+
+
+# Returns a list of products, with connector entries JOINed in.
+# limit sets the maximum amount of products returned, if possible.
+def get_products(db, limit=10):
+    # TODO: gonna need args for group by/order by
+    params = {"limit": limit}
+    with db.cursor(dictionary=True) as cur:
+        # The two joins basically adds extra values, from the connector table,
+        # to the product tuples. No need to send extra SQL queries to check a
+        # connector's type or gender.
+        #
+        # This was stolen from: https://dba.stackexchange.com/a/208083
+        cur.execute(
+            """
+            SELECT
+                p.*,
+                c1.gender as "c1gender", c1.type as "c1type",
+                c2.gender as "c2gender", c2.type as "c2type"
+            FROM
+                (SELECT * FROM Products LIMIT %(limit)s) p
+                JOIN Connectors c1 ON p.idconnector1 = c1.idconnector
+                JOIN Connectors c2 ON p.idconnector2 = c2.idconnector;
+        """,
+            params,
+        )
+        rows = cur.fetchall()
+    return rows
+
+
+# get a single product
+def get_product(db, id):
+    param = {"idproduct": id}
+    with db.cursor(dictionary=True) as cur:
+        # Query stolen from above.
+        cur.execute(
+            """
+            SELECT
+                p.*,
+                c1.gender as "c1gender", c1.type as "c1type",
+                c2.gender as "c2gender", c2.type as "c2type"
+            FROM
+                (SELECT * FROM Products WHERE idproduct = %(idproduct)s LIMIT 1) p
+                JOIN Connectors c1 ON p.idconnector1 = c1.idconnector
+                JOIN Connectors c2 ON p.idconnector2 = c2.idconnector;
+            """,
+            param,
+        )
+        row = cur.fetchone()
+    if id is None:
+        raise Exception("bad id")
+
+    return row
 
 
 def get_connectors(db):
@@ -269,13 +271,6 @@ def page_about():
     return render_template("about.html")
 
 
-@app.route("/product/<id>")
-def page_product(id):
-    db = get_db()
-    rows = get_product(db, id)
-    db.close()
-    return render_template("product.html", product=rows, genders=GENDERS)
-
 @app.route("/products/")
 def page_products():
 
@@ -283,6 +278,15 @@ def page_products():
     rows = get_products(db, limit=200)
     db.close()
     return render_template("products.html", products=rows, genders=GENDERS)
+
+
+@app.route("/product/<id>")
+def page_product(id):
+    db = get_db()
+    rows = get_product(db, id)
+    db.close()
+    return render_template("product.html", product=rows, genders=GENDERS)
+
 
 @app.route("/register")
 def page_register():
