@@ -91,10 +91,6 @@ def open_db():
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
             database=os.getenv("DB_DATABASE"),
-            # Better or more obvious error handling?
-            # sql_mode = "STRICT_ALL_TABLES",
-            # get_warnings = True,
-            # raise_on_warnings = True,
         )
         return db
     except mysql.connector.Error as err:
@@ -252,6 +248,17 @@ def add_product(db, param):
         """,
             param,
         )
+
+
+def remove_products(db, products):
+    if len(products) < 1:
+        raise Exception("No products selected")
+    with db.cursor() as cur:
+        # TODO: not sure if done efficiently using a transaction?
+        # There's no need to start a transaction by hand, since the pkg does it
+        # automagically for you (hence you need to call db.commit())
+        # Source: https://stackoverflow.com/a/52723551
+        cur.executemany("DELETE FROM Products WHERE idproduct = %s;", products)
 
 
 ################################################################################
@@ -484,6 +491,50 @@ def page_products_new_post():
 
     flash("Successfully added product")
     return redirect(url_for("page_products_new"))
+
+
+@app.route("/products/remove")
+def page_products_remove():
+    if session.get("role") != 1:
+        flash("Insufficient permissions")
+        return redirect(url_for("page_home"))
+
+    db = get_db()
+    try:
+        prods = get_products(db, limit=200)
+        db.close()
+    except mysql.connector.Error as err:
+        db.close()
+        print("Error while getting products: ", err)
+        flash("Error while getting products")
+        return redirect(url_for("page_products_remove"))
+    return render_template("removeproducts.html", products=prods, genders=GENDERS)
+
+
+@app.route("/products/remove", methods=["POST"])
+def page_products_remove_post():
+    if session.get("role") != 1:
+        flash("Insufficient permissions")
+        return redirect(url_for("page_home"))
+
+    # Grabs the list of product IDs and convert each item to a tuple.
+    # the cur.executemany() in remove_products() wants a list of tuples!
+    # For an example of the list of tuples, see:
+    # https://dev.mysql.com/doc/connector-python/en/connector-python-api-mysqlcursor-executemany.html
+    products = [(id,) for id in request.form.getlist("products", type=int)]
+    db = get_db()
+    try:
+        remove_products(db, products)
+        db.commit()
+        db.close()
+    except Exception as err:
+        db.close()
+        print("Error while removing products: ", err)
+        flash("Error while removing products")
+        return redirect(url_for("page_products_remove"))
+
+    flash("Successfully removed " + str(len(products)) + " products")
+    return redirect(url_for("page_products_remove"))
 
 
 ################################################################################
