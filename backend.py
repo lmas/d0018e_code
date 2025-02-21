@@ -1,4 +1,4 @@
-import os, sys, secrets
+import os, sys, secrets, time
 
 from flask import Flask, request, render_template, session, redirect, url_for, flash
 from flask import g as request_globals
@@ -267,10 +267,7 @@ def remove_products(db, products):
 
 @app.route("/")
 def page_home():
-    db = get_db()
-    rows = get_products(db, limit=5)
-    db.close()
-    return render_template("home.html", products=rows, genders=GENDERS)
+    return render_template("home.html")
 
 
 @app.route("/about")
@@ -540,5 +537,11 @@ def page_products_remove_post():
 ################################################################################
 
 if __name__ == "__main__":
+    # Delay the backend startup when it's being run inside docker,
+    # as the mysql container starts up too slowly!
+    delay = int(os.getenv("DB_DELAY", default=0))
+    time.sleep(delay)
+
+    # Start the app
     init_db()
     app.run()
