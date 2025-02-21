@@ -177,7 +177,7 @@ def update_user(db, param):
         )
 
 
-# Returns a list of products, with connector entries JOINed in.
+# Returns a list of products, with connector entries JOIN'ed in.
 # limit sets the maximum amount of products returned, if possible.
 def get_products(db, limit=10):
     # TODO: gonna need args for group by/order by
@@ -186,8 +186,10 @@ def get_products(db, limit=10):
         # The two joins basically adds extra values, from the connector table,
         # to the product tuples. No need to send extra SQL queries to check a
         # connector's type or gender.
-        #
         # This was stolen from: https://dba.stackexchange.com/a/208083
+        #
+        # Any subqueries (queries inside a parenthesis) must also have an alias!
+        # Source: https://stackoverflow.com/a/1888845
         cur.execute(
             """
             SELECT
@@ -195,7 +197,7 @@ def get_products(db, limit=10):
                 c1.gender as "c1gender", c1.type as "c1type",
                 c2.gender as "c2gender", c2.type as "c2type"
             FROM
-                (SELECT * FROM Products LIMIT %(limit)s) p
+                (SELECT * FROM Products LIMIT %(limit)s) AS p
                 JOIN Connectors c1 ON p.idconnector1 = c1.idconnector
                 JOIN Connectors c2 ON p.idconnector2 = c2.idconnector;
         """,
@@ -453,7 +455,7 @@ def page_products_new():
     except mysql.connector.Error as err:
         db.close()
         print("Error: {}".format(err))
-        flash("Error occured while getting connectors")
+        flash("Error while getting connectors")
         return redirect(url_for("page_products_new"))
     return render_template("addproduct.html", connectors=conn)
 

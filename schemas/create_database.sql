@@ -85,7 +85,7 @@ CREATE TABLE ShoppingCarts (
 );
 
 -- This table holds confirmed/historical orders, sourced from the shopping cart.
--- Once an order has been made, it's price should be made permament!
+-- Once an order has been made, it's price should be made permanent!
 CREATE TABLE Orders (
 	iduser INT NOT NULL,
 	idproduct INT NOT NULL,
