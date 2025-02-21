@@ -275,7 +275,7 @@ def page_about():
     return render_template("about.html")
 
 
-@app.route("/products/")
+@app.route("/products")
 def page_products():
 
     db = get_db()
