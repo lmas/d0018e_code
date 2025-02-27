@@ -6,13 +6,13 @@
 
 <form method="POST">
 	<label for="email">Email:</label>
-	<input type="email" id="email" name="email"><br>
+	<input type="email" id="email" name="email" value="{{userinfo["email"]}}"><br>
 	<label for="password">Password:</label>
-	<input type="password" id="pwd" name="pwd"><br>
+	<input type="password" id="pwd" name="pwd" value="{{userinfo["password"]}}"><br>
         <label for="fName">First name:</label>
-        <input type="text" id="fName" name="fName"><br>
+		<input type="text" id="fName" name="fName" value="{{userinfo["first_name"]}}"><br>
         <label for="lName">Last name:</label>
-        <input type="text" id="lName" name="lName"><br>
+		<input type="text" id="lName" name="lName" value="{{userinfo["last_name"]}}"><br>
 	<input type="submit" value="Submit">
 	<button type="button"><a href="/profile">Back</a></button>
 </form>

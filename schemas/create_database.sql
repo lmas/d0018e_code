@@ -85,7 +85,7 @@ CREATE TABLE ShoppingCarts (
 );
 
 -- This table holds confirmed/historical orders, sourced from the shopping cart.
--- Once an order has been made, it's price should be made permament!
+-- Once an order has been made, it's price should be made permanent!
 CREATE TABLE Orders (
 	iduser INT NOT NULL,
 	idproduct INT NOT NULL,
@@ -125,6 +125,15 @@ INSERT INTO Connectors (idconnector, gender, type) VALUES
 (1, 0, "Type-A"), (2, 0, "Type-B"), (3, 1, "Type-A"), (4, 1, "Type-B");
 
 INSERT INTO Products (price, in_stock, standard, length, color, idconnector1, idconnector2) VALUES
+(199, 10, 3.0, 1.5, "black", 1, 3),
+(199, 1, 3.0, 1.5, "red", 1, 3),
+(99, 5, 2.0, 1.5, "black", 1, 3),
+(99, 5, 2.0, 1.5, "red", 1, 3),
+(99, 5, 2.0, 3.5, "black", 2, 4),
+(99, 5, 2.0, 3.5, "red", 2, 4),
+(59, 10, 1.5, 0.5, "black", 2, 4),
+(59, 10, 1.5, 0.5, "red", 2, 4),
+
 (199, 10, 3.0, 1.5, "black", 1, 3),
 (199, 1, 3.0, 1.5, "red", 1, 3),
 (99, 5, 2.0, 1.5, "black", 1, 3),

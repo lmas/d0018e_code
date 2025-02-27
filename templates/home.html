@@ -6,15 +6,8 @@
 	huuge product ad...
 </div>
 
-<h1>Latest Products</h1>
-<ul>
-{% for p in products %}
-	<li><a href="/product/{{p.idproduct}}">
-		{{p.length}}m {{p.color}} USB {{p.standard}} cable
-		({{p.c1type}} {{genders[p.c1gender]}} to
-		{{p.c2type}} {{genders[p.c2gender]}})
-	</a></li>
-{% endfor %}
-</ul>
+<p>
+	<a href="/products">Take a look at our products!</a>
+</p>
 
 {% endblock %}

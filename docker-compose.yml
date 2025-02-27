@@ -4,13 +4,6 @@
 version: "3"
 services:
 
-  nginx:
-    image: nginx:1.27.3-alpine
-    ports:
-      - "8080:80"
-    volumes:
-      - ./src/nginx.conf:/etc/nginx/conf.d/default.conf
-
   mysql:
     image: mysql:8.0-debian
     environment:
@@ -28,15 +21,24 @@ services:
     build: ./src/
     image: flask:0.0.1
     depends_on:
-      - nginx
       - mysql
     environment:
       # These variables must reflect the values from the mysql container above
-      FLASK_DB_HOST: mysql
-      FLASK_DB_PORT: 7070
-      FLASK_DB_USER: EXAMPLE
-      FLASK_DB_PASSWORD: EXAMPLE
-      FLASK_DB_DATABASE: EXAMPLE
+      DB_HOST: mysql
+      DB_PORT: 7070
+      DB_USER: EXAMPLE
+      DB_PASSWORD: EXAMPLE
+      DB_DATABASE: EXAMPLE
+      DB_DELAY: 3
     ports:
       - 5000:5000
+
+  nginx:
+    image: nginx:1.27.3-alpine
+    depends_on:
+      - flask
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src/nginx.conf:/etc/nginx/conf.d/default.conf
 
