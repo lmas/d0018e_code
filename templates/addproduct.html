@@ -29,14 +29,14 @@
                 <optgroup label="Male">
                         {% for connector in connectors %}
                                 {% if connector["gender"] == 1 %}
-                                        <option value="{{ connector['idconnector'] }}">{{ connector["type"] }}</option>
+                                        <option value="{{ connector['idconnector'] }}">Male {{ connector["type"] }}</option>
                                 {% endif %}
                         {% endfor %}
                 </optgroup>
                 <optgroup label="Female">
                         {% for connector in connectors %}
                                 {% if connector["gender"] == 0 %}
-                                        <option value="{{ connector['idconnector'] }}">{{ connector["type"] }}</option>
+                                        <option value="{{ connector['idconnector'] }}">Female {{ connector["type"] }}</option>
                                 {% endif %}
                         {% endfor %}
                 </optgroup>
@@ -45,14 +45,14 @@
                 <optgroup label="Male">
                         {% for connector in connectors %}
                                 {% if connector["gender"] == 1 %}
-                                        <option value="{{ connector['idconnector'] }}">{{ connector["type"] }}</option>
+                                        <option value="{{ connector['idconnector'] }}">Male {{ connector["type"] }}</option>
                                 {% endif %}
                         {% endfor %}
                 </optgroup>
                 <optgroup label="Female">
                         {% for connector in connectors %}
                                 {% if connector["gender"] == 0 %}
-                                        <option value="{{ connector['idconnector'] }}">{{ connector["type"] }}</option>
+                                        <option value="{{ connector['idconnector'] }}">Female {{ connector["type"] }}</option>
                                 {% endif %}
                         {% endfor %}
                 </optgroup>
