@@ -45,7 +45,7 @@ footer {
 	/*Adds extra spacing between flexbox items*/
 	gap: 20px;
 
-	background-color: red; /*TODO*/
+	background-color: yellow; /*TODO*/
 }
 
 #menu hr {
@@ -61,6 +61,13 @@ footer {
 	flex-grow: 1;
 }
 
+#flashes {
+	padding: 10px;
+	text-align: center;
+	list-style: none;
+	background-color: aqua; /*TODO*/
+}
+
 /******************************************************************************/
 /*CUSTOM CSS CLASSES AND OTHER CONTENT*/
 
@@ -70,7 +77,7 @@ footer {
 	align-items: center;
 	justify-content: center;
 
-	background-color: yellow; /*TODO*/
+	background-color: red; /*TODO*/
 }
 
 table {
