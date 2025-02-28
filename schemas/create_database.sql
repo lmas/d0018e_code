@@ -91,6 +91,7 @@ CREATE TABLE Orders (
 	idproduct INT NOT NULL,
 	amount INT NOT NULL,
 	price INT NOT NULL,
+	timestamp INT NOT NULL,
 	PRIMARY KEY (iduser, idproduct),
 
 	-- As above.
@@ -115,6 +116,7 @@ CREATE TABLE Reviews (
 --------------------------------------------------------------------------------
 -- Adds some example tuples to the tables.
 
+-- IDs START AT 1 --
 INSERT INTO Users (role, email, password, first_name, last_name) VALUES
 (1, "admin@localhost", "pass", "Adam", "Adminson"),
 (0, "humle@home", "humle", "Humle", "Son"),
@@ -144,3 +146,8 @@ INSERT INTO Products (price, in_stock, standard, length, color, idconnector1, id
 (59, 10, 1.5, 0.5, "red", 2, 4);
 
 -- TODO: insert exampe data to shopping cart/orders/reviews when working on those features.
+
+INSERT INTO ShoppingCarts (iduser, idproduct, amount) VALUES
+(2, 3, 1),
+(2, 4, 2),
+(2, 2, 3);

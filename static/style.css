@@ -72,3 +72,43 @@ footer {
 
 	background-color: yellow; /*TODO*/
 }
+
+table {
+	max-width: fit-content;
+	border-spacing: 0px;
+}
+table th {
+	padding-left: 5px;
+	padding-right: 5px;
+	text-align: center;
+	border-top: thin solid; 
+	border-left: thin solid;
+	border-bottom: thin solid;
+	}
+
+	table th:first-child {
+		border-left: thin solid;
+	}
+	
+	table th:last-child {
+	border-right: thin solid;
+	}
+
+table td {
+	padding-left: 5px;
+	padding-right: 5px;
+	border-left: thin solid;
+	border-bottom: thin solid;
+    }
+    
+    table td:first-child {
+	 border-left: thin solid;
+    }
+    
+    table td:last-child {
+	 border-right: thin solid;
+    }
+
+button {
+	max-width: fit-content;
+}

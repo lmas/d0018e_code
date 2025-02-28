@@ -356,6 +356,7 @@ def page_login_post():
     # All ok!
     session["email"] = email
     session["role"] = user["role"]
+    session["id"] = user["iduser"]
     flash("You were successfully logged in as " + email)
     return redirect(url_for("page_profile"))
 
@@ -535,7 +536,112 @@ def page_products_remove_post():
     flash("Successfully removed " + str(len(products)) + " products")
     return redirect(url_for("page_products_remove"))
 
+# Help function to get all items in shoppingcart, total price and which items exceed stock amount
+def get_shoppingcart(db):
+    products = []
+    stockProblem = []
+    price = 0
+    amountError = 0
+    param = {"email": session.get("email"), "id": session.get("id")}
+    with db.cursor(dictionary=True) as cur:
+        try:
+            cur.execute("""
+                        SELECT idproduct, amount
+                        FROM ShoppingCarts
+                        WHERE iduser=%(id)s
+                        ;""", param)
+            rows = cur.fetchall()
+            for row in rows:
+                product = get_product(db, row["idproduct"])
+                product["amount"] = row["amount"]
+                price += row["amount"] * product["price"]
+                products.append(product)
+                if row["amount"] > product["in_stock"]:
+                    product["amount"] = row["amount"]
+                    stockProblem.append(product)
+        except mysql.connector.Error as err:
+            db.close()
+            print("Error: {}".format(err))
+            raise Exception("Error while getting shoppingcart")
+    return products, price, stockProblem
 
+# Help function to empty the shoppingcart, will happen once everything has been moved to the order table
+def empty_shoppingcart(db):
+    param = {"email": session.get("email"), "id": session.get("id")}
+    with db.cursor(dictionary=True) as cur:
+        try:
+            cur.execute("""DELETE FROM ShoppingCarts WHERE iduser=%(id)s;""", param)
+            db.commit()
+        except mysql.connector.Error as err:
+            db.close()
+            print("Error: {}".format(err))
+            raise Exception("Error while emptying shoppingcart")
+    return
+
+# Help function to place order (move from shoppingcart to orders)
+def place_order(db):
+    products = []
+    # Using a standardized time to simplify grouping
+    epoch_time = int(time.time())
+    param = {"email": session.get("email"), "id": session.get("id")}
+    with db.cursor(dictionary=True) as cur:
+        try:
+            products, _, _ = get_shoppingcart(db)
+            for prod in products:
+                prod["timestamp"] = epoch_time
+                prod["iduser"] = param["id"]
+                cur.execute("""
+                            INSERT INTO Orders(iduser, idproduct, amount, price, timestamp) 
+                            VALUES (%(iduser)s, %(idproduct)s, %(amount)s, %(price)s, %(timestamp)s)
+                            ;"""
+                            , prod)
+                empty_shoppingcart(db)
+                db.commit()
+        except mysql.connector.Error as err:
+            db.close()
+            flash("Error: {}".format(err))
+            raise Exception("Error occured while moving from shoppingcart to order.")
+    return
+
+@app.route('/checkout')
+def page_checkout():
+    # Make sure they're logged in before trying to reach checkout page
+    if session.get("email") is None:
+        flash("Please log in before trying to checkout")
+        return redirect(url_for("page_home"))
+    # Setup for queries etc
+    products = []
+    stockProblem = []
+    price = 0
+    db = get_db()
+    try:
+        products, price, stockProblem = get_shoppingcart(db)
+        db.close()
+    except:
+        db.close()
+        raise Exception("Error while getting shoppingcart")
+    if len(stockProblem) != 0:
+        flash("Note: Delivery time will increase because one or more selected products amount exceed products in stock")
+    if len(products) == 0:
+        flash("No items in shopping cart, please add some items before checking out")
+        return redirect(url_for('page_products'))
+    return render_template("checkout.html", products=products, genders=GENDERS, stockProblem=stockProblem, price=price)
+
+@app.route('/checkout', methods=['POST'])
+def page_checkout_order():
+    # Make sure they're logged in before trying to reach checkout page
+    if session.get("email") is None:
+        flash("Please log in before trying to checkout")
+        return redirect(url_for("page_home"))
+    db = get_db()
+    try:
+        # TODO: help function to reduce in_stock (UPDATE query using amount from shoppingcart)
+        place_order(db)
+        db.close()
+    except:
+        raise Exception("Error while placing order")
+    flash("Order registered, thank you for shopping with USB-R-US")
+    return redirect(url_for('page_home'))
 ################################################################################
 
 if __name__ == "__main__":
