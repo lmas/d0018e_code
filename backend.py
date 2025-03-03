@@ -747,7 +747,7 @@ def reduce_stock(db, id, amount):
 # Help function to place order (move from shoppingcart to orders)
 def place_order(db):
     products = []
-    # Using a standardized time to simplify grouping
+    # Using a standardized time to simplify grouping of an order's items
     epoch_time = int(time.time())
     param = {"email": session.get("email"), "id": session.get("id")}
     with db.cursor(dictionary=True) as cur:
@@ -761,7 +761,7 @@ def place_order(db):
                 # Try to insert product with userid, amount price and timestamp into orders table
                 cur.execute(
                     """
-                            INSERT INTO Orders(iduser, idproduct, amount, price, timestamp) 
+                            INSERT INTO Orders(iduser, idproduct, amount, price, timestamp)
                             VALUES (%(iduser)s, %(idproduct)s, %(amount)s, %(price)s, %(timestamp)s)
                             ;""",
                     prod,

@@ -91,8 +91,7 @@ CREATE TABLE Orders (
 	idproduct INT NOT NULL,
 	amount INT NOT NULL,
 	price INT NOT NULL,
-	timestamp INT NOT NULL,
-	PRIMARY KEY (iduser, idproduct),
+	timestamp INT NOT NULL, -- This column can be used to group multiple items into a single order!
 
 	-- As above.
 	FOREIGN KEY (iduser) REFERENCES Users(iduser) ON DELETE CASCADE ON UPDATE CASCADE,
