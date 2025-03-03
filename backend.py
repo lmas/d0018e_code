@@ -240,7 +240,22 @@ def get_connectors(db):
     return rows
 
 
-def add_product(db, param):
+def add_product_to_cart(db, params):
+    # Adds the product to the cart using an UPSERT query.
+    # Found example of "ON DUPLICATE KEY" constraint here:
+    # https://stackoverflow.com/a/6108484
+    with db.cursor(dictionary=True) as cur:
+        cur.execute(
+            """
+            INSERT INTO ShoppingCarts (iduser, idproduct, amount)
+            VALUES (%(user)s, %(prod)s, %(amount)s)
+            ON DUPLICATE KEY UPDATE amount = amount + %(amount)s;
+        """,
+            params,
+        )
+
+
+def add_new_product(db, param):
     with db.cursor(dictionary=True) as cur:
         cur.execute(
             """
@@ -296,6 +311,56 @@ def page_product(id):
         flash("Invalid product ID.")
         return redirect(url_for("page_products"))
     return render_template("product.html", product=prod, genders=GENDERS)
+
+
+@app.route("/product/<id>", methods=["POST"])
+def page_product_buy(id):
+    # Validate user
+    user = session.get("id")
+    if user is None:
+        flash("Please log in before trying to add products to the shopping cart.")
+        return redirect(url_for("page_product", id=id))
+
+    # Validate the buying amount
+    amount = get_int_form("amount")
+    if (amount < 1) or (amount > 10):
+        flash("Invalid amount to buy.")
+        return redirect(url_for("page_product", id=id))
+
+    # TODO: need a specially locked transaction to prevent race conditions?
+
+    db = get_db()
+    try:
+        prod = get_product(db, id)
+    except Exception as err:
+        db.close()
+        flash("Invalid product ID.")
+        return redirect(url_for("page_products"))
+
+    # Validate the stock amount
+    stock = int(prod["in_stock"])
+    if stock < amount:
+        flash("Too few items left in stock (" + str(stock) + " items left).")
+        return redirect(url_for("page_product", id=id))
+
+    # Add product to cart
+    params = {
+        "user": user,
+        "prod": id,
+        "amount": amount,
+    }
+    try:
+        add_product_to_cart(db, params)
+        db.commit()
+        db.close()
+    except Exception as err:
+        db.close()
+        print("Error adding product to cart: " + str(err))
+        return "Internal server error"
+
+    # All ok!
+    flash("Added " + str(amount) + " items to the cart.")
+    return redirect(url_for("page_product", id=id))
 
 
 @app.route("/register")
@@ -483,7 +548,7 @@ def page_products_new_post():
     }
     db = get_db()
     try:
-        add_product(db, param)
+        add_new_product(db, param)
         # DONT FORGET TO COMMIT THE UPDATE/INSERT
         db.commit()
         db.close()
