@@ -576,11 +576,13 @@ def empty_shoppingcart(db):
             raise Exception("Error while emptying shoppingcart")
     return
 
-# Help function to reduce in_stock, should happen once for every item
+# Help function to reduce in_stock, should happen once for every item in shopping cart
 def reduce_stock(db, id, amount):
     with db.cursor(dictionary=True) as cur:
         try:
+            # Get the specific product
             prod = get_product(db, id)
+            # Check if in_stock - amount < 0
             new_stock = prod["in_stock"] - amount
             if new_stock < 0:
                 raise Exception("Too few items in stock.")
@@ -604,16 +606,21 @@ def place_order(db):
     param = {"email": session.get("email"), "id": session.get("id")}
     with db.cursor(dictionary=True) as cur:
         try:
+            # Get products in cart, the total price and any items exceeding stock amount.
             products, price, stockProblem = get_shoppingcart(db)
             for prod in products:
+                # Add parameters like timestamp and iduser which wasnt present in "product"
                 prod["timestamp"] = epoch_time
                 prod["iduser"] = param["id"]
+                # Try to insert product with userid, amount price and timestamp into orders table
                 cur.execute("""
                             INSERT INTO Orders(iduser, idproduct, amount, price, timestamp) 
                             VALUES (%(iduser)s, %(idproduct)s, %(amount)s, %(price)s, %(timestamp)s)
                             ;"""
                             , prod)
+                # Reduce stock of said product
                 reduce_stock(db, prod["idproduct"], prod["amount"])
+            # If all the products pass, empty the shoppingcarts table of entries with current users id
             empty_shoppingcart(db)
             db.commit()
         except Exception as err:
@@ -635,14 +642,17 @@ def page_checkout():
     price = 0
     db = get_db()
     try:
+        # Try to get shopping cart of specific user
         products, price, stockProblem = get_shoppingcart(db)
         db.close()
     except:
         db.close()
         raise Exception("Error while getting shoppingcart")
+    # Check if there are any item amounts exceeding stock amount, if go back to shoppingcart
     if len(stockProblem) != 0:
         flash("Note: Number of items exceed items in stock")
         return render_template("shoppingcart.html", products=products, genders=GENDERS, stockProblem=stockProblem)
+    # Check if shopping cart is empty and redirect to products page if it is
     if len(products) == 0:
         flash("No items in shopping cart, please add some items before checking out")
         return redirect(url_for('page_products'))
@@ -656,6 +666,8 @@ def page_checkout_order():
         return redirect(url_for("page_home"))
     db = get_db()
     try:
+        # Try to place all items from users shoppingcart into an order
+        # remove them from shoppingcart and reduce inventory stock.
         products, price, stockProblem = place_order(db)
         db.close()
     except:
