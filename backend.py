@@ -572,6 +572,7 @@ def empty_shoppingcart(db):
         try:
             cur.execute("""DELETE FROM ShoppingCarts WHERE iduser=%(id)s;""", param)
         except mysql.connector.Error as err:
+            db.close()
             print("Error: {}".format(err))
             raise Exception("Error while emptying shoppingcart")
     return
@@ -594,6 +595,7 @@ def reduce_stock(db, id, amount):
                         ;"""
                         , param)
         except Exception as err:
+            db.close()
             flash("Error: {}".format(err))
             raise Exception("Error occured while reducing stock.")
     return
@@ -651,6 +653,7 @@ def page_checkout():
     # Check if there are any item amounts exceeding stock amount, if go back to shoppingcart
     if len(stockProblem) != 0:
         flash("Note: Number of items exceed items in stock")
+        # TODO: Make sure we 'redirect' to correct page
         return render_template("shoppingcart.html", products=products, genders=GENDERS, stockProblem=stockProblem)
     # Check if shopping cart is empty and redirect to products page if it is
     if len(products) == 0:
