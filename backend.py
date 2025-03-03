@@ -226,9 +226,8 @@ def get_product(db, id):
             param,
         )
         row = cur.fetchone()
-    if id is None:
-        raise Exception("bad id")
-
+    if row is None:
+        raise Exception("missing product")
     return row
 
 
@@ -289,9 +288,14 @@ def page_products():
 @app.route("/product/<id>")
 def page_product(id):
     db = get_db()
-    rows = get_product(db, id)
-    db.close()
-    return render_template("product.html", product=rows, genders=GENDERS)
+    try:
+        prod = get_product(db, id)
+        db.close()
+    except Exception as err:
+        db.close()
+        flash("Invalid product ID.")
+        return redirect(url_for("page_products"))
+    return render_template("product.html", product=prod, genders=GENDERS)
 
 
 @app.route("/register")
