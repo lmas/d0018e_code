@@ -671,6 +671,7 @@ def page_products_remove_post():
     flash("Successfully removed " + str(len(products)) + " products")
     return redirect(url_for("page_products_remove"))
 
+
 # Help function to get all items in shoppingcart, total price and which items exceed stock amount
 def get_shoppingcart(db):
     products = []
@@ -680,11 +681,14 @@ def get_shoppingcart(db):
     param = {"email": session.get("email"), "id": session.get("id")}
     with db.cursor(dictionary=True) as cur:
         try:
-            cur.execute("""
+            cur.execute(
+                """
                         SELECT idproduct, amount
                         FROM ShoppingCarts
                         WHERE iduser=%(id)s
-                        ;""", param)
+                        ;""",
+                param,
+            )
             rows = cur.fetchall()
             for row in rows:
                 product = get_product(db, row["idproduct"])
@@ -700,6 +704,7 @@ def get_shoppingcart(db):
             raise Exception("Error while getting shoppingcart")
     return products, price, stockProblem
 
+
 # Help function to empty the shoppingcart, will happen once everything has been moved to the order table
 def empty_shoppingcart(db):
     param = {"email": session.get("email"), "id": session.get("id")}
@@ -712,6 +717,7 @@ def empty_shoppingcart(db):
             raise Exception("Error while emptying shoppingcart")
     return
 
+
 # Help function to reduce in_stock, should happen once for every item in shopping cart
 def reduce_stock(db, id, amount):
     with db.cursor(dictionary=True) as cur:
@@ -723,17 +729,20 @@ def reduce_stock(db, id, amount):
             if new_stock < 0:
                 raise Exception("Too few items in stock.")
             param = {"idProduct": id, "new_stock": new_stock}
-            cur.execute("""
+            cur.execute(
+                """
                         UPDATE Products
                         SET in_stock=%(new_stock)s
                         WHERE idProduct=%(idProduct)s;
-                        ;"""
-                        , param)
+                        ;""",
+                param,
+            )
         except Exception as err:
             db.close()
             flash("Error: {}".format(err))
             raise Exception("Error occured while reducing stock.")
     return
+
 
 # Help function to place order (move from shoppingcart to orders)
 def place_order(db):
@@ -750,11 +759,13 @@ def place_order(db):
                 prod["timestamp"] = epoch_time
                 prod["iduser"] = param["id"]
                 # Try to insert product with userid, amount price and timestamp into orders table
-                cur.execute("""
+                cur.execute(
+                    """
                             INSERT INTO Orders(iduser, idproduct, amount, price, timestamp) 
                             VALUES (%(iduser)s, %(idproduct)s, %(amount)s, %(price)s, %(timestamp)s)
-                            ;"""
-                            , prod)
+                            ;""",
+                    prod,
+                )
                 # Reduce stock of said product
                 reduce_stock(db, prod["idproduct"], prod["amount"])
             # If all the products pass, empty the shoppingcarts table of entries with current users id
@@ -766,7 +777,8 @@ def place_order(db):
             raise Exception("Error occured while moving from shoppingcart to order.")
     return products, price, stockProblem
 
-@app.route('/checkout')
+
+@app.route("/checkout")
 def page_checkout():
     stockProblem = []
     # Make sure they're logged in before trying to reach checkout page
@@ -793,10 +805,11 @@ def page_checkout():
     # Check if shopping cart is empty and redirect to products page if it is
     if len(products) == 0:
         flash("No items in shopping cart, please add some items before checking out")
-        return redirect(url_for('page_products'))
+        return redirect(url_for("page_products"))
     return render_template("checkout.html", products=products, genders=GENDERS, stockProblem=stockProblem, price=price)
 
-@app.route('/checkout', methods=['POST'])
+
+@app.route("/checkout", methods=["POST"])
 def page_checkout_order():
     # Make sure they're logged in before trying to reach checkout page
     if session.get("email") is None:
@@ -810,9 +823,11 @@ def page_checkout_order():
         db.close()
     except:
         flash("Error occured while placing order, check amounts")
-        return render_template('shoppingcart.html', products=products, genders=GENDERS, stockproblem=stockProblem)
+        return render_template("shoppingcart.html", products=products, genders=GENDERS, stockproblem=stockProblem)
     flash("Order registered, thank you for shopping with USB-R-US")
-    return render_template('ordersuccessful.html', products=products, genders=GENDERS, price=price)
+    return render_template("ordersuccessful.html", products=products, genders=GENDERS, price=price)
+
+
 ################################################################################
 
 if __name__ == "__main__":
