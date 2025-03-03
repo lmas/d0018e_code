@@ -11,6 +11,10 @@ services:
       MYSQL_DATABASE: EXAMPLE
       MYSQL_USER: EXAMPLE
       MYSQL_PASSWORD: EXAMPLE
+    # Allows mysql to change it's thread prios, don't know why it has to...
+    # Source: https://stackoverflow.com/a/55706057
+    cap_add:
+      - SYS_NICE
     ports:
       - 7070:7070
     volumes:
