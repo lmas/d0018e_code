@@ -180,7 +180,7 @@ def update_user(db, param):
 # Returns a list of products, with connector entries JOIN'ed in.
 # limit sets the maximum amount of products returned, if possible.
 def get_products(db, limit=10):
-    # TODO: gonna need args for group by/order by
+    # TODO: gonna need args for group by/order by??
     params = {"limit": limit}
     with db.cursor(dictionary=True) as cur:
         # The two joins basically adds extra values, from the connector table,
@@ -243,14 +243,18 @@ def get_connectors(db):
 def get_reviews(db, id):
     param = {"idproduct": id}
     with db.cursor(dictionary=True) as cur:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT review.*, user.first_name as first_name, user.last_name as last_name
             FROM
                 (SELECT * FROM Reviews WHERE idproduct = %(idproduct)s) as review
                 JOIN Users user on review.iduser = user.iduser;
-        """, param)
+        """,
+            param,
+        )
         rows = cur.fetchall()
     return rows
+
 
 def add_product_to_cart(db, params):
     # Adds the product to the cart using an UPSERT query.
@@ -260,8 +264,20 @@ def add_product_to_cart(db, params):
         cur.execute(
             """
             INSERT INTO ShoppingCarts (iduser, idproduct, amount)
-            VALUES (%(user)s, %(prod)s, %(amount)s)
+            VALUES (%(user)s, %(product)s, %(amount)s)
             ON DUPLICATE KEY UPDATE amount = amount + %(amount)s;
+        """,
+            params,
+        )
+
+
+def add_review(db, params):
+    with db.cursor(dictionary=True) as cur:
+        cur.execute(
+            """
+            INSERT INTO Reviews (iduser, idproduct, rating, comment)
+            VALUES (%(user)s, %(product)s, %(rating)s, %(comment)s)
+            ON DUPLICATE KEY UPDATE rating = %(rating)s, comment = %(comment)s;
         """,
             params,
         )
@@ -282,7 +298,6 @@ def remove_products(db, products):
     if len(products) < 1:
         raise Exception("No products selected")
     with db.cursor() as cur:
-        # TODO: not sure if done efficiently using a transaction?
         # There's no need to start a transaction by hand, since the pkg does it
         # automagically for you (hence you need to call db.commit())
         # Source: https://stackoverflow.com/a/52723551
@@ -323,10 +338,10 @@ def page_product(id):
         db.close()
         flash("Invalid product ID.")
         return redirect(url_for("page_products"))
-    return render_template("product.html", product=prod, genders=GENDERS, reviews=reviews)
+    return render_template("product.html", product=prod, genders=GENDERS, reviews=reviews, iduser=session.get("id"))
 
 
-@app.route("/product/<id>", methods=["POST"])
+@app.route("/product/<id>/buy", methods=["POST"])
 def page_product_buy(id):
     # Validate user
     user = session.get("id")
@@ -339,8 +354,6 @@ def page_product_buy(id):
     if (amount < 1) or (amount > 10):
         flash("Invalid amount to buy.")
         return redirect(url_for("page_product", id=id))
-
-    # TODO: need a specially locked transaction to prevent race conditions?
 
     db = get_db()
     try:
@@ -359,7 +372,7 @@ def page_product_buy(id):
     # Add product to cart
     params = {
         "user": user,
-        "prod": id,
+        "product": id,
         "amount": amount,
     }
     try:
@@ -373,6 +386,46 @@ def page_product_buy(id):
 
     # All ok!
     flash("Added " + str(amount) + " items to the cart.")
+    return redirect(url_for("page_product", id=id))
+
+
+@app.route("/product/<id>/review", methods=["POST"])
+def page_product_review(id):
+    # Validate user
+    user = session.get("id")
+    if user is None:
+        flash("Please log in before trying to add a new review.")
+        return redirect(url_for("page_product", id=id))
+
+    # Validate form data
+    rating = get_int_form("rating")
+    if (rating < 1) or (rating > 5):
+        flash("Review rating out of range.")
+        return redirect(url_for("page_product", id=id))
+    comment = get_str_form("comment")
+    if len(comment) > 255:
+        flash("Review comment was too long.")
+        return redirect(url_for("page_product", id=id))
+
+    # Save the review
+    params = {
+        "user": user,
+        "product": id,
+        "rating": rating,
+        "comment": comment,
+    }
+    db = get_db()
+    try:
+        add_review(db, params)
+        db.commit()
+        db.close()
+    except Exception as err:
+        db.close()
+        print("Error adding review to product: " + str(err))
+        return "Internal server error"
+
+    # All ok!
+    flash("Your review was saved!")
     return redirect(url_for("page_product", id=id))
 
 

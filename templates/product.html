@@ -8,11 +8,11 @@
 	{{product.c2type}} {{genders[product.c2gender]}})
 </h1>
 <ul>
-	<li> Price:{{product.price}} </li>
-	<li> Stock:{{product.in_stock}} </li>
+	<li> Price: {{product.price}} </li>
+	<li> Stock: {{product.in_stock}} </li>
 </ul>
 
-<form method="POST">
+<form method="POST" action="/product/{{product.idproduct}}/buy">
 	<label for="amount">Amount: </label>
 	<input id="amount" type="number" name="amount" value="1" min="1" max="10" step="1" required>
 	<input type="submit" value="Add to cart">
@@ -28,6 +28,24 @@
 	{% endfor %}</ul>
 {% else %}
 	<p>Sorry, no reviews yet!</p>
+{% endif %}
+
+{% if iduser %}
+	<h2>New review</h2>
+	<form method="POST" action="/product/{{product.idproduct}}/review">
+		<label for="rating">Rating:</label>
+		<select id="rating" name="rating" required>
+			<option value="5">{{ "%s" |format("&#9733;" * 5) |safe }}</option>
+			<option value="4">{{ "%s" |format("&#9733;" * 4) |safe }}</option>
+			<option value="3">{{ "%s" |format("&#9733;" * 3) |safe }}</option>
+			<option value="2">{{ "%s" |format("&#9733;" * 2) |safe }}</option>
+			<option value="1">{{ "%s" |format("&#9733;" * 1) |safe }}</option>
+		</select><br>
+		<label for="comment">Comment (max 255 characters):</label><br>
+		<textarea id="comment" name="comment" maxlength="255" rows="10" cols="80"
+			spellcheck="true" placeholder="Your optional comment here..." required></textarea><br>
+		<input type="submit" value="Add review">
+	</form>
 {% endif %}
 
 {% endblock %}
