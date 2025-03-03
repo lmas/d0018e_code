@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block title %}Order successful{% endblock %}
+{% block content%}
+
+<h1>Order placed</h1>
+
+<table>
+        <tr>
+                <th>Amount</th>
+                <th>Name</th>
+                <th>Price/unit</th>
+        </tr>
+        {% for p in products %}
+                <tr>
+                        <!-- Amount -->
+                        <td>{{p.amount}}</td>
+                        <!-- Name -->
+                        <td><a href="/product/{{p.idproduct}}">
+                                {{p.length}}m {{p.color}} USB {{p.standard}} cable
+                                ({{p.c1type}} {{genders[p.c1gender]}} to
+                                {{p.c2type}} {{genders[p.c2gender]}})
+                        </a></td>
+                        <!-- Price/unit -->
+                        <td>{{p.price}}</td>
+                </tr>
+        {% endfor %}
+</table>
+<table>Total cost: {{price}}</table>
+<br>
+<button type="button"><a href="/">Back</a></button>
+{% endblock %}

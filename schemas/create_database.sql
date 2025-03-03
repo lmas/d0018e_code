@@ -148,6 +148,6 @@ INSERT INTO Products (price, in_stock, standard, length, color, idconnector1, id
 -- TODO: insert exampe data to shopping cart/orders/reviews when working on those features.
 
 INSERT INTO ShoppingCarts (iduser, idproduct, amount) VALUES
-(2, 3, 1),
+(2, 1, 1),
 (2, 4, 2),
-(2, 2, 3);
+(2, 2, 1);

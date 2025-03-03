@@ -571,11 +571,29 @@ def empty_shoppingcart(db):
     with db.cursor(dictionary=True) as cur:
         try:
             cur.execute("""DELETE FROM ShoppingCarts WHERE iduser=%(id)s;""", param)
-            db.commit()
         except mysql.connector.Error as err:
-            db.close()
             print("Error: {}".format(err))
             raise Exception("Error while emptying shoppingcart")
+    return
+
+# Help function to reduce in_stock, should happen once for every item
+def reduce_stock(db, id, amount):
+    with db.cursor(dictionary=True) as cur:
+        try:
+            prod = get_product(db, id)
+            new_stock = prod["in_stock"] - amount
+            if new_stock < 0:
+                raise Exception("Too few items in stock.")
+            param = {"idProduct": id, "new_stock": new_stock}
+            cur.execute("""
+                        UPDATE Products
+                        SET in_stock=%(new_stock)s
+                        WHERE idProduct=%(idProduct)s;
+                        ;"""
+                        , param)
+        except Exception as err:
+            flash("Error: {}".format(err))
+            raise Exception("Error occured while reducing stock.")
     return
 
 # Help function to place order (move from shoppingcart to orders)
@@ -586,7 +604,7 @@ def place_order(db):
     param = {"email": session.get("email"), "id": session.get("id")}
     with db.cursor(dictionary=True) as cur:
         try:
-            products, _, _ = get_shoppingcart(db)
+            products, price, stockProblem = get_shoppingcart(db)
             for prod in products:
                 prod["timestamp"] = epoch_time
                 prod["iduser"] = param["id"]
@@ -595,16 +613,18 @@ def place_order(db):
                             VALUES (%(iduser)s, %(idproduct)s, %(amount)s, %(price)s, %(timestamp)s)
                             ;"""
                             , prod)
-                empty_shoppingcart(db)
-                db.commit()
-        except mysql.connector.Error as err:
+                reduce_stock(db, prod["idproduct"], prod["amount"])
+            empty_shoppingcart(db)
+            db.commit()
+        except Exception as err:
             db.close()
             flash("Error: {}".format(err))
             raise Exception("Error occured while moving from shoppingcart to order.")
-    return
+    return products, price, stockProblem
 
 @app.route('/checkout')
 def page_checkout():
+    stockProblem = []
     # Make sure they're logged in before trying to reach checkout page
     if session.get("email") is None:
         flash("Please log in before trying to checkout")
@@ -621,7 +641,8 @@ def page_checkout():
         db.close()
         raise Exception("Error while getting shoppingcart")
     if len(stockProblem) != 0:
-        flash("Note: Delivery time will increase because one or more selected products amount exceed products in stock")
+        flash("Note: Number of items exceed items in stock")
+        return render_template("shoppingcart.html", products=products, genders=GENDERS, stockProblem=stockProblem)
     if len(products) == 0:
         flash("No items in shopping cart, please add some items before checking out")
         return redirect(url_for('page_products'))
@@ -635,13 +656,13 @@ def page_checkout_order():
         return redirect(url_for("page_home"))
     db = get_db()
     try:
-        # TODO: help function to reduce in_stock (UPDATE query using amount from shoppingcart)
-        place_order(db)
+        products, price, stockProblem = place_order(db)
         db.close()
     except:
-        raise Exception("Error while placing order")
+        flash("Error occured while placing order, check amounts")
+        return render_template('shoppingcart.html', products=products, genders=GENDERS, stockproblem=stockProblem)
     flash("Order registered, thank you for shopping with USB-R-US")
-    return redirect(url_for('page_home'))
+    return render_template('ordersuccessful.html', products=products, genders=GENDERS, price=price)
 ################################################################################
 
 if __name__ == "__main__":
