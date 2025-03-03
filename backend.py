@@ -219,7 +219,7 @@ def get_product(db, id):
                 c1.gender as "c1gender", c1.type as "c1type",
                 c2.gender as "c2gender", c2.type as "c2type"
             FROM
-                (SELECT * FROM Products WHERE idproduct = %(idproduct)s LIMIT 1) p
+                (SELECT * FROM Products WHERE idproduct = %(idproduct)s LIMIT 1) AS p
                 JOIN Connectors c1 ON p.idconnector1 = c1.idconnector
                 JOIN Connectors c2 ON p.idconnector2 = c2.idconnector;
             """,
@@ -239,6 +239,18 @@ def get_connectors(db):
         raise Exception("Connector table empty")
     return rows
 
+
+def get_reviews(db, id):
+    param = {"idproduct": id}
+    with db.cursor(dictionary=True) as cur:
+        cur.execute("""
+            SELECT review.*, user.first_name as first_name, user.last_name as last_name
+            FROM
+                (SELECT * FROM Reviews WHERE idproduct = %(idproduct)s) as review
+                JOIN Users user on review.iduser = user.iduser;
+        """, param)
+        rows = cur.fetchall()
+    return rows
 
 def add_product_to_cart(db, params):
     # Adds the product to the cart using an UPSERT query.
@@ -305,12 +317,13 @@ def page_product(id):
     db = get_db()
     try:
         prod = get_product(db, id)
+        reviews = get_reviews(db, id)
         db.close()
     except Exception as err:
         db.close()
         flash("Invalid product ID.")
         return redirect(url_for("page_products"))
-    return render_template("product.html", product=prod, genders=GENDERS)
+    return render_template("product.html", product=prod, genders=GENDERS, reviews=reviews)
 
 
 @app.route("/product/<id>", methods=["POST"])

@@ -68,6 +68,10 @@ footer {
 	background-color: aqua; /*TODO*/
 }
 
+#reviews {
+	list-style: none;
+}
+
 /******************************************************************************/
 /*CUSTOM CSS CLASSES AND OTHER CONTENT*/
 

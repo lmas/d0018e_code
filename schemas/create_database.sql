@@ -151,3 +151,9 @@ INSERT INTO ShoppingCarts (iduser, idproduct, amount) VALUES
 (2, 1, 1),
 (2, 4, 2),
 (2, 2, 1);
+
+INSERT INTO Reviews (iduser, idproduct, rating, comment) VALUES
+(1, 1, 4, "Love this black cable! But it was expensive..."),
+(2, 1, 3, "lost 2 stars for expensive price"),
+(3, 1, 1, "too expensive"),
+(2, 2, 5, "Red is the new black");

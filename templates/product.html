@@ -18,4 +18,16 @@
 	<input type="submit" value="Add to cart">
 </form>
 
+<h2>Reviews</h2>
+{% if reviews %}
+	<ul id="reviews">{% for r in reviews %}
+		<li>
+			{{ "%s%s" |format("&#9733;" * r.rating, "&#9734;" * (5 - r.rating)) |safe }}
+			by {{r.first_name}} {{r.last_name}}: "{{r.comment}}"
+		</li>
+	{% endfor %}</ul>
+{% else %}
+	<p>Sorry, no reviews yet!</p>
+{% endif %}
+
 {% endblock %}
