@@ -314,8 +314,59 @@ def page_home():
 
 @app.route("/cart")
 def page_cart():
-    return render_template("cart.html")
 
+    products = []
+    stockProblem = []
+    price = 0
+    db = get_db()
+    
+    try:
+        products, price, stockProblem = get_shoppingcart(db)
+        
+        
+        
+        db.close()
+    except Exception as err:
+        db.close()
+        flash("Invalid product ID.")
+        raise Exception("Error while getting shoppingcart")
+    if len(products) == 0:
+        flash("No items in shopping cart, please add some items before checking out")
+        return redirect(url_for("page_products"))
+    return render_template("cart.html", products=products, genders=GENDERS, price=price)
+
+
+@app.route("/cart/removeall", methods=["POST"])
+def remove_button():
+    
+    db = get_db()
+    try:
+        empty_shoppingcart(db)
+        db.commit()
+        db.close()
+    except:
+        db.close()
+    return redirect(url_for("page_products"))
+
+
+@app.route("/cart/<id>/remove", methods=["POST"])
+def remove(id):
+    
+    db = get_db()
+    user = session.get("id")
+    
+    
+    try:
+        
+        remove_one_shoppingcart(db, id, user)
+        db.commit()
+        db.close()
+    except:
+        db.close()
+    return redirect(url_for("page_cart"))
+    
+# return render_template("product.html", product=prod,
+#  genders=GENDERS, reviews=reviews, iduser=session.get("id"))
 
 @app.route("/about")
 def page_about():
@@ -721,6 +772,33 @@ def empty_shoppingcart(db):
             raise Exception("Error while emptying shoppingcart")
     return
 
+
+def remove_one_shoppingcart(db, product, user):
+    param = {"product": product, "user": user}
+    
+    
+    with db.cursor(dictionary=True) as cur:
+        
+        try:
+            cur.execute("""SELECT amount FROM ShoppingCarts WHERE (iduser=%(user)s AND idproduct=%(product)s);""", param)
+            row = cur.fetchone()
+            
+            amount = row["amount"]
+            
+            if amount > 1:
+                
+                param["new_amount"] = amount-1
+                
+                cur.execute(""" UPDATE ShoppingCarts SET amount=%(new_amount)s WHERE (idProduct=%(product)s AND iduser=%(user)s); """, param)
+                
+            else :
+                cur.execute("""DELETE FROM ShoppingCarts WHERE (iduser=%(user)s AND idproduct=%(product)s) LIMIT 1;""", param)
+            
+        except mysql.connector.Error as err:
+            db.close()
+            print("Error: {}".format(err))
+            raise Exception("Error while emptying shoppingcart")
+    return
 
 # Help function to reduce in_stock, should happen once for every item in shopping cart
 def reduce_stock(db, id, amount):
