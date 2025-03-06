@@ -1,11 +1,37 @@
 {% extends "layout.html" %}
 {% block title %}Cart{% endblock %}
 {% block content%}
+<h1>Cart</h1>
 
+<table>
+    <tr>
+            <th>Amount</th>
+            <th>Name</th>
+            <th>Price/unit</th>
+    </tr>
+    {% for p in products %}
+            <tr>
+                    <!-- Amount -->
+                    <td>{{p.amount}}</td>
+                    <!-- Name -->
+                    <td><a href="/product/{{p.idproduct}}">
+                            {{p.length}}m {{p.color}} USB {{p.standard}} cable
+                            ({{p.c1type}} {{genders[p.c1gender]}} to
+                            {{p.c2type}} {{genders[p.c2gender]}})
+                    </a></td>
+                    <!-- Price/unit -->
+                    <td>{{p.price}}</td>
+                    <form method="POST" action="/cart/{{p.idproduct}}/remove">
+                        <td><input type="submit" value="remove"></td>
+                    </form>
+                    
+            </tr>
+    {% endfor %}
+</table>
 
+<form method="POST" action="/cart/removeall">
+    <input type="submit" value="remove all products">
+</form>
 
-<p>
-	no products
-</p>
-
+<button type="button"><a href="/checkout"> checkout</a></button>
 {% endblock %}
