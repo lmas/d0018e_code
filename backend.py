@@ -312,6 +312,10 @@ def remove_products(db, products):
 def page_home():
     return render_template("home.html")
 
+@app.route("/cart")
+def page_cart():
+    return render_template("cart.html")
+
 
 @app.route("/about")
 def page_about():
