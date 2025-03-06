@@ -10,8 +10,6 @@ Creating a basic E-commerce site with a relational database.
 | 3          | Grading and comment                      | Low        | Low      | In progress     |
 | 4          | Fixups and complements                   | Low        | Low      | Project backlog |
 
-We'll be selling USB cables
-
 Tech. stack:
 
 - Database: MySQL
@@ -19,3 +17,11 @@ Tech. stack:
 - Frontend: HTML/CSS via Flask templates
 - Web server: Nginx
 - Host: Docker on an AWS EC2 instance
+
+## Running
+
+- Install `docker` and `docker-compose` (see OS specific guides of your own choice)
+- Clone the repo: `git clone https://github.com/lmas/d0018e_code ./src`
+- Create a local copy of the compose file: `cp ./src/docker-compose.yml .`
+- Edit `docker-compose.yml` and add your own settings for database, ports, etc.
+- Run all containers: `docker-compose up`
