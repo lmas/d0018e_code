@@ -305,7 +305,7 @@ def remove_products(db, products):
 
 
 ################################################################################
-# FLASK APPLICATION AND PAGES
+# BASIC PAGES
 
 
 @app.route("/")
@@ -313,175 +313,13 @@ def page_home():
     return render_template("home.html")
 
 
-@app.route("/cart")
-def page_cart():
-
-    products = []
-    stockProblem = []
-    price = 0
-    db = get_db()
-
-    try:
-        products, price, stockProblem = get_shoppingcart(db)
-
-        db.close()
-    except Exception as err:
-        db.close()
-        flash("Invalid product ID.")
-        raise Exception("Error while getting shoppingcart")
-    if len(products) == 0:
-        flash("No items in shopping cart, please add some items before checking out")
-        return redirect(url_for("page_products"))
-    return render_template("cart.html", products=products, genders=GENDERS, price=price)
-
-
-@app.route("/cart/removeall", methods=["POST"])
-def remove_button():
-
-    db = get_db()
-    try:
-        empty_shoppingcart(db)
-        db.commit()
-        db.close()
-    except:
-        db.close()
-    return redirect(url_for("page_products"))
-
-
-@app.route("/cart/<id>/remove", methods=["POST"])
-def remove(id):
-
-    db = get_db()
-    user = session.get("id")
-
-    try:
-
-        remove_one_shoppingcart(db, id, user)
-        db.commit()
-        db.close()
-    except:
-        db.close()
-    return redirect(url_for("page_cart"))
-
-
-# return render_template("product.html", product=prod,
-#  genders=GENDERS, reviews=reviews, iduser=session.get("id"))
-
-
 @app.route("/about")
 def page_about():
     return render_template("about.html")
 
 
-@app.route("/products")
-def page_products():
-
-    db = get_db()
-    rows = get_products(db, limit=200)
-    db.close()
-    return render_template("products.html", products=rows, genders=GENDERS)
-
-
-@app.route("/product/<id>")
-def page_product(id):
-    db = get_db()
-    try:
-        prod = get_product(db, id)
-        reviews = get_reviews(db, id)
-        db.close()
-    except Exception as err:
-        db.close()
-        flash("Invalid product ID.")
-        return redirect(url_for("page_products"))
-    return render_template("product.html", product=prod, genders=GENDERS, reviews=reviews, iduser=session.get("id"))
-
-
-@app.route("/product/<id>/buy", methods=["POST"])
-def page_product_buy(id):
-    # Validate user
-    user = session.get("id")
-    if user is None:
-        flash("Please log in before trying to add products to the shopping cart.")
-        return redirect(url_for("page_product", id=id))
-
-    # Validate the buying amount
-    amount = get_int_form("amount")
-    if (amount < 1) or (amount > 10):
-        flash("Invalid amount to buy.")
-        return redirect(url_for("page_product", id=id))
-
-    db = get_db()
-    try:
-        prod = get_product(db, id)
-    except Exception as err:
-        db.close()
-        flash("Invalid product ID.")
-        return redirect(url_for("page_products"))
-
-    # Validate the stock amount
-    stock = int(prod["in_stock"])
-    if stock < amount:
-        flash("Too few items left in stock (" + str(stock) + " items left).")
-        return redirect(url_for("page_product", id=id))
-
-    # Add product to cart
-    params = {
-        "user": user,
-        "product": id,
-        "amount": amount,
-    }
-    try:
-        add_product_to_cart(db, params)
-        db.commit()
-        db.close()
-    except Exception as err:
-        db.close()
-        print("Error adding product to cart: " + str(err))
-        return "Internal server error"
-
-    # All ok!
-    flash("Added " + str(amount) + " items to the cart.")
-    return redirect(url_for("page_product", id=id))
-
-
-@app.route("/product/<id>/review", methods=["POST"])
-def page_product_review(id):
-    # Validate user
-    user = session.get("id")
-    if user is None:
-        flash("Please log in before trying to add a new review.")
-        return redirect(url_for("page_product", id=id))
-
-    # Validate form data
-    rating = get_int_form("rating")
-    if (rating < 1) or (rating > 5):
-        flash("Review rating out of range.")
-        return redirect(url_for("page_product", id=id))
-    comment = get_str_form("comment")
-    if len(comment) > 255:
-        flash("Review comment was too long.")
-        return redirect(url_for("page_product", id=id))
-
-    # Save the review
-    params = {
-        "user": user,
-        "product": id,
-        "rating": rating,
-        "comment": comment,
-    }
-    db = get_db()
-    try:
-        add_review(db, params)
-        db.commit()
-        db.close()
-    except Exception as err:
-        db.close()
-        print("Error adding review to product: " + str(err))
-        return "Internal server error"
-
-    # All ok!
-    flash("Your review was saved!")
-    return redirect(url_for("page_product", id=id))
+################################################################################
+# USER PAGES
 
 
 @app.route("/register")
@@ -630,6 +468,121 @@ def page_profile_update_post():
     return redirect(url_for("page_profile"))
 
 
+################################################################################
+# PRODUCT PAGES
+
+
+@app.route("/products")
+def page_products():
+
+    db = get_db()
+    rows = get_products(db, limit=200)
+    db.close()
+    return render_template("products.html", products=rows, genders=GENDERS)
+
+
+@app.route("/product/<id>")
+def page_product(id):
+    db = get_db()
+    try:
+        prod = get_product(db, id)
+        reviews = get_reviews(db, id)
+        db.close()
+    except Exception as err:
+        db.close()
+        flash("Invalid product ID.")
+        return redirect(url_for("page_products"))
+    return render_template("product.html", product=prod, genders=GENDERS, reviews=reviews, iduser=session.get("id"))
+
+
+@app.route("/product/<id>/review", methods=["POST"])
+def page_product_review(id):
+    # Validate user
+    user = session.get("id")
+    if user is None:
+        flash("Please log in before trying to add a new review.")
+        return redirect(url_for("page_product", id=id))
+
+    # Validate form data
+    rating = get_int_form("rating")
+    if (rating < 1) or (rating > 5):
+        flash("Review rating out of range.")
+        return redirect(url_for("page_product", id=id))
+    comment = get_str_form("comment")
+    if len(comment) > 255:
+        flash("Review comment was too long.")
+        return redirect(url_for("page_product", id=id))
+
+    # Save the review
+    params = {
+        "user": user,
+        "product": id,
+        "rating": rating,
+        "comment": comment,
+    }
+    db = get_db()
+    try:
+        add_review(db, params)
+        db.commit()
+        db.close()
+    except Exception as err:
+        db.close()
+        print("Error adding review to product: " + str(err))
+        return "Internal server error"
+
+    # All ok!
+    flash("Your review was saved!")
+    return redirect(url_for("page_product", id=id))
+
+
+@app.route("/product/<id>/buy", methods=["POST"])
+def page_product_buy(id):
+    # Validate user
+    user = session.get("id")
+    if user is None:
+        flash("Please log in before trying to add products to the shopping cart.")
+        return redirect(url_for("page_product", id=id))
+
+    # Validate the buying amount
+    amount = get_int_form("amount")
+    if (amount < 1) or (amount > 10):
+        flash("Invalid amount to buy.")
+        return redirect(url_for("page_product", id=id))
+
+    db = get_db()
+    try:
+        prod = get_product(db, id)
+    except Exception as err:
+        db.close()
+        flash("Invalid product ID.")
+        return redirect(url_for("page_products"))
+
+    # Validate the stock amount
+    stock = int(prod["in_stock"])
+    if stock < amount:
+        flash("Too few items left in stock (" + str(stock) + " items left).")
+        return redirect(url_for("page_product", id=id))
+
+    # Add product to cart
+    params = {
+        "user": user,
+        "product": id,
+        "amount": amount,
+    }
+    try:
+        add_product_to_cart(db, params)
+        db.commit()
+        db.close()
+    except Exception as err:
+        db.close()
+        print("Error adding product to cart: " + str(err))
+        return "Internal server error"
+
+    # All ok!
+    flash("Added " + str(amount) + " items to the cart.")
+    return redirect(url_for("page_product", id=id))
+
+
 @app.route("/products/new")
 def page_products_new():
     # Only reachable if you're logged in, and has admin role
@@ -749,6 +702,55 @@ def page_products_remove_post():
     return redirect(url_for("page_products_remove"))
 
 
+################################################################################
+# SHOPPING CART PAGES
+
+
+@app.route("/cart")
+def page_cart():
+    products = []
+    stockProblem = []
+    price = 0
+    db = get_db()
+    try:
+        products, price, stockProblem = get_shoppingcart(db)
+        db.close()
+    except Exception as err:
+        db.close()
+        flash("Invalid product ID.")
+        raise Exception("Error while getting shoppingcart")
+
+    if len(products) == 0:
+        flash("No items in shopping cart, please add some items before checking out")
+        return redirect(url_for("page_products"))
+    return render_template("cart.html", products=products, genders=GENDERS, price=price)
+
+
+@app.route("/cart/removeall", methods=["POST"])
+def page_cart_removeall():
+    db = get_db()
+    try:
+        empty_shoppingcart(db)
+        db.commit()
+        db.close()
+    except:
+        db.close()
+    return redirect(url_for("page_products"))
+
+
+@app.route("/cart/<id>/remove", methods=["POST"])
+def page_cart_remove(id):
+    db = get_db()
+    user = session.get("id")
+    try:
+        remove_one_shoppingcart(db, id, user)
+        db.commit()
+        db.close()
+    except:
+        db.close()
+    return redirect(url_for("page_cart"))
+
+
 # Help function to get all items in shoppingcart, total price and which items exceed stock amount
 def get_shoppingcart(db):
     products = []
@@ -759,11 +761,7 @@ def get_shoppingcart(db):
     with db.cursor(dictionary=True) as cur:
         try:
             cur.execute(
-                """
-                        SELECT idproduct, amount
-                        FROM ShoppingCarts
-                        WHERE iduser=%(id)s
-                        ;""",
+                "SELECT idproduct, amount FROM ShoppingCarts WHERE iduser=%(id)s ;",
                 param,
             )
             rows = cur.fetchall()
@@ -787,7 +785,7 @@ def empty_shoppingcart(db):
     param = {"email": session.get("email"), "id": session.get("id")}
     with db.cursor(dictionary=True) as cur:
         try:
-            cur.execute("""DELETE FROM ShoppingCarts WHERE iduser=%(id)s;""", param)
+            cur.execute("DELETE FROM ShoppingCarts WHERE iduser=%(id)s;", param)
         except mysql.connector.Error as err:
             db.close()
             print("Error: {}".format(err))
@@ -797,31 +795,21 @@ def empty_shoppingcart(db):
 
 def remove_one_shoppingcart(db, product, user):
     param = {"product": product, "user": user}
-
     with db.cursor(dictionary=True) as cur:
-
         try:
-            cur.execute(
-                """SELECT amount FROM ShoppingCarts WHERE (iduser=%(user)s AND idproduct=%(product)s);""", param
-            )
+            cur.execute("SELECT amount FROM ShoppingCarts WHERE (iduser=%(user)s AND idproduct=%(product)s);", param)
             row = cur.fetchone()
-
             amount = row["amount"]
-
             if amount > 1:
-
                 param["new_amount"] = amount - 1
-
                 cur.execute(
-                    """ UPDATE ShoppingCarts SET amount=%(new_amount)s WHERE (idProduct=%(product)s AND iduser=%(user)s); """,
+                    "UPDATE ShoppingCarts SET amount=%(new_amount)s WHERE (idProduct=%(product)s AND iduser=%(user)s);",
                     param,
                 )
-
             else:
                 cur.execute(
-                    """DELETE FROM ShoppingCarts WHERE (iduser=%(user)s AND idproduct=%(product)s) LIMIT 1;""", param
+                    "DELETE FROM ShoppingCarts WHERE (iduser=%(user)s AND idproduct=%(product)s) LIMIT 1;", param
                 )
-
         except mysql.connector.Error as err:
             db.close()
             print("Error: {}".format(err))
@@ -840,14 +828,7 @@ def reduce_stock(db, id, amount):
             if new_stock < 0:
                 raise Exception("Too few items in stock.")
             param = {"idProduct": id, "new_stock": new_stock}
-            cur.execute(
-                """
-                        UPDATE Products
-                        SET in_stock=%(new_stock)s
-                        WHERE idProduct=%(idProduct)s;
-                        ;""",
-                param,
-            )
+            cur.execute("UPDATE Products SET in_stock=%(new_stock)s WHERE idProduct=%(idProduct)s ;", param)
         except Exception as err:
             db.close()
             flash("Error: {}".format(err))
