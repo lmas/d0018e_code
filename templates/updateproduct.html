@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+{% block title %}Update Product{% endblock %}
+{% block content%}
+
+<h1>Update Product</h1>
+
+<p>Select product options:</p>
+<form method="POST" action="/products/new">
+	<input type="hidden" name="idproduct" value="{{product.idproduct}}">
+	<label for="price">Price:</label>
+	<input type="number" id="price" name="price" value="{{product.price}}" required><br>
+	<label for="in_stock">In stock:</label>
+	<input type="number" id="in_stock" name="in_stock" value="{{product.in_stock}}" required><br>
+	<label for="length">Length:</label>
+	<input type="number" id="length" name="length" step="0.1" value="{{product.length}}" required><br>
+	<label for="color">Color:</label>
+	<input type="text" id="color" name="color" value="{{product.color}}" required><br>
+	<p>Standard: </p>
+	<select name="standard" id="standard" required>
+		<option value="1.0" {% if product.standard == 1.0 %} selected {% endif %}>USB 1.0</option>
+		<option value="1.1" {% if product.standard == 1.1 %} selected {% endif %}>USB 1.1</option>
+		<option value="2.0" {% if product.standard == 2.0 %} selected {% endif %}>USB 2.0</option>
+		<option value="3.0" {% if product.standard == 3.0 %} selected {% endif %}>USB 3.0</option>
+		<option value="3.1" {% if product.standard == 3.1 %} selected {% endif %}>USB 3.1</option>
+		<option value="3.2" {% if product.standard == 3.2 %} selected {% endif %}>USB 3.2</option>
+		<option value="4.0" {% if product.standard == 4.0 %} selected {% endif %}>USB 4.0</option>
+	</select><br>
+	<p>Connectors:</p>
+	<select name="idcon1" id="idcon1" required>
+		<optgroup label="Male">
+			{% for connector in connectors %}
+				{% if connector["gender"] == 1 %}
+				<option value="{{connector["idconnector"]}}"
+					{% if product.idconnector1 == connector["idconnector"] %} selected {% endif %}
+				>Male {{connector["type"]}}</option>
+				{% endif %}
+			{% endfor %}
+		</optgroup>
+		<optgroup label="Female">
+			{% for connector in connectors %}
+				{% if connector["gender"] == 0 %}
+					<option value="{{connector["idconnector"]}}"
+					{% if product.idconnector1 == connector["idconnector"] %} selected {% endif %}
+					>Female {{connector["type"]}}</option>
+				{% endif %}
+			{% endfor %}
+		</optgroup>
+	</select>
+	<select name="idcon2" id="idcon2" required>
+		<optgroup label="Male">
+			{% for connector in connectors %}
+				{% if connector["gender"] == 1 %}
+					<option value="{{connector["idconnector"]}}"
+					{% if product.idconnector2 == connector["idconnector"] %} selected {% endif %}
+					>Male {{connector["type"]}}</option>
+				{% endif %}
+			{% endfor %}
+		</optgroup>
+		<optgroup label="Female">
+			{% for connector in connectors %}
+				{% if connector["gender"] == 0 %}
+					<option value="{{connector["idconnector"]}}"
+					{% if product.idconnector2 == connector["idconnector"] %} selected {% endif %}
+					>Female {{connector["type"]}}</option>
+				{% endif %}
+			{% endfor %}
+		</optgroup>
+	</select><br><br>
+	<input type="submit" value="Submit">
+	<button type="button"><a href="/products/handle">Back</a></button>
+</form>
+
+{% endblock %}

@@ -17,7 +17,6 @@
 				<a href="/">Home</a>
 				<a href="/about">About us</a>
 				<a href="/products">Products</a>
-				<a href="/cart">Cart</a>
 				<hr>
 
 				<!-- User menu -->
@@ -25,9 +24,7 @@
 					<p>User: {{session.get("email")}}</p>
 					<a href="/profile">Profile</a>
 					<a href="/logout">Logout</a>
-
-					<!-- TODO: For testing purposes, move this link to shopping cart later -->
-					<a href="/checkout">Checkout</a>
+					<a href="/cart">Cart</a>
 				{% else %}
 					<a href="/login">Login</a>
 					<a href="/register">Register</a>
@@ -38,8 +35,7 @@
 					<hr>
 					<p>Administration</p>
 					<a href="/orders">Order history</a>
-					<a href="/products/new">Add product</a>
-					<a href="/products/remove">Remove product</a>
+					<a href="/products/handle">Handle products</a>
 				{% endif %}
 
 			</aside>

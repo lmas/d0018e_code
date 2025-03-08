@@ -1,24 +1,25 @@
 {% extends "layout.html" %}
-{% block title %}Remove Products{% endblock %}
+{% block title %}Handle Products{% endblock %}
 {% block content%}
 
-<h1>Remove Products</h1>
+<h1>Handle Products</h1>
 
 {% if not products %}
-	<p>Sorry, no products to remove!</p>
+	<p>Sorry, no products!</p>
 {% else %}
-	<p>Select products to be removed:</p>
 	<form method="POST">
 		{% for p in products %}
 		<label>
-			<input type="checkbox" name="products" value="{{p.idproduct}}">
+			<input type="checkbox" name="removeproducts" value="{{p.idproduct}}">
 				{{p.length}}m {{p.color}} USB {{p.standard}} cable
 				({{p.c1type}} {{genders[p.c1gender]}} to
 				{{p.c2type}} {{genders[p.c2gender]}})
+				<a href="/product/{{p.idproduct}}/update">Update</a>
 		</label><br>
 		{% endfor %}
 		<br><br>
-		<input type="submit" value="Submit">
+		<input type="submit" value="Remove all selected products">
+		<button type="button"><a href="/products/new">Add new product</a></button>
 		<button type="button"><a href="/">Back</a></button>
 	</form>
 {% endif %}

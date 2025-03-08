@@ -18,6 +18,7 @@ app = Flask(__name__)
 # https://flask.palletsprojects.com/en/stable/quickstart/#sessions
 # Here we're randomizing the app.secret_key every time the server is restarted
 app.secret_key = secrets.token_bytes()
+app.secret_key = "asdasdasdasd"
 
 ################################################################################
 # GLOBAL HELPER FUNCTIONS (these should be at the top of the file)
@@ -61,7 +62,7 @@ def get_str_form(name, default=""):
         return default
 
 
-def get_int_form(name, default=""):
+def get_int_form(name, default=0):
     try:
         return request.form.get(name, default, int)
     except ValueError:
@@ -180,7 +181,6 @@ def update_user(db, param):
 # Returns a list of products, with connector entries JOIN'ed in.
 # limit sets the maximum amount of products returned, if possible.
 def get_products(db, limit=10):
-    # TODO: gonna need args for group by/order by??
     params = {"limit": limit}
     with db.cursor(dictionary=True) as cur:
         # The two joins basically adds extra values, from the connector table,
@@ -199,7 +199,8 @@ def get_products(db, limit=10):
             FROM
                 (SELECT * FROM Products LIMIT %(limit)s) AS p
                 JOIN Connectors c1 ON p.idconnector1 = c1.idconnector
-                JOIN Connectors c2 ON p.idconnector2 = c2.idconnector;
+                JOIN Connectors c2 ON p.idconnector2 = c2.idconnector
+            ORDER BY p.idproduct ASC;
         """,
             params,
         )
@@ -289,6 +290,18 @@ def add_new_product(db, param):
             """
             INSERT INTO Products(price, in_stock, standard, length, color, idconnector1, idconnector2)
             VALUES( %(price)s, %(in_stock)s, %(standard)s, %(length)s, %(color)s, %(idcon1)s, %(idcon2)s );
+        """,
+            param,
+        )
+
+
+def update_product(db, param):
+    with db.cursor(dictionary=True) as cur:
+        cur.execute(
+            """
+            UPDATE Products SET price=%(price)s, in_stock=%(in_stock)s, standard=%(standard)s,
+            length=%(length)s, color=%(color)s, idconnector1=%(idcon1)s, idconnector2=%(idcon2)s
+            WHERE idproduct=%(idproduct)s;
         """,
             param,
         )
@@ -583,6 +596,29 @@ def page_product_buy(id):
     return redirect(url_for("page_product", id=id))
 
 
+@app.route("/product/<id>/update")
+def page_product_update(id):
+    # Only reachable if you're logged in, and has admin role
+    if session.get("role") != 1:
+        flash("Insufficient permissions")
+        return redirect(url_for("page_home"))
+
+    db = get_db()
+    try:
+        prod = get_product(db, id)
+        conn = get_connectors(db)
+        db.close()
+    except Exception as err:
+        db.close()
+        flash("Invalid product ID.")
+        return redirect(url_for("page_products_handle"))
+    except mysql.connector.Error as err:
+        db.close()
+        flash("Error while getting connectors")
+        return redirect(url_for("page_products_handle"))
+    return render_template("updateproduct.html", product=prod, genders=GENDERS, connectors=conn)
+
+
 @app.route("/products/new")
 def page_products_new():
     # Only reachable if you're logged in, and has admin role
@@ -611,6 +647,7 @@ def page_products_new_post():
 
     # Place values in a dict so it can be used in the sql query
     param = {
+        "idproduct": get_int_form("idproduct"),
         "price": get_int_form("price"),
         "in_stock": get_int_form("in_stock"),
         "standard": get_float_form("standard"),
@@ -620,7 +657,7 @@ def page_products_new_post():
         "idcon2": get_int_form("idcon2"),
     }
     # Perform basic validation on the values
-    if (param["price"] < 1) or (param["price"] > 999):
+    if (param["price"] < 1) or (param["price"] > 9999):
         flash("Product price is out of range.")
         return redirect(url_for("page_products_new"))
     if param["in_stock"] < 1:
@@ -644,7 +681,10 @@ def page_products_new_post():
 
     db = get_db()
     try:
-        add_new_product(db, param)
+        if param["idproduct"] < 1:
+            add_new_product(db, param)
+        else:
+            update_product(db, param)
         # DONT FORGET TO COMMIT THE UPDATE/INSERT
         db.commit()
         db.close()
@@ -652,14 +692,20 @@ def page_products_new_post():
         db.close()
         print("Error: {}".format(err))
         flash("Error while inserting product in database")
-        return redirect(url_for("page_products_new"))
+        if param["idproduct"] < 1:
+            return redirect(url_for("page_products_new"))
+        else:
+            return redirect(url_for("page_products_handle"))
 
     flash("Successfully added product")
-    return redirect(url_for("page_products_new"))
+    if param["idproduct"] < 1:
+        return redirect(url_for("page_products_new"))
+    else:
+        return redirect(url_for("page_products_handle"))
 
 
-@app.route("/products/remove")
-def page_products_remove():
+@app.route("/products/handle")
+def page_products_handle():
     if session.get("role") != 1:
         flash("Insufficient permissions")
         return redirect(url_for("page_home"))
@@ -672,12 +718,12 @@ def page_products_remove():
         db.close()
         print("Error while getting products: ", err)
         flash("Error while getting products")
-        return redirect(url_for("page_products_remove"))
-    return render_template("removeproducts.html", products=prods, genders=GENDERS)
+        return redirect(url_for("page_products_handle"))
+    return render_template("handleproducts.html", products=prods, genders=GENDERS)
 
 
-@app.route("/products/remove", methods=["POST"])
-def page_products_remove_post():
+@app.route("/products/handle", methods=["POST"])
+def page_products_handle_post():
     if session.get("role") != 1:
         flash("Insufficient permissions")
         return redirect(url_for("page_home"))
@@ -686,7 +732,7 @@ def page_products_remove_post():
     # the cur.executemany() in remove_products() wants a list of tuples!
     # For an example of the list of tuples, see:
     # https://dev.mysql.com/doc/connector-python/en/connector-python-api-mysqlcursor-executemany.html
-    products = [(id,) for id in request.form.getlist("products", type=int)]
+    products = [(id,) for id in request.form.getlist("removeproducts", type=int)]
     db = get_db()
     try:
         remove_products(db, products)
@@ -696,10 +742,10 @@ def page_products_remove_post():
         db.close()
         print("Error while removing products: ", err)
         flash("Error while removing products")
-        return redirect(url_for("page_products_remove"))
+        return redirect(url_for("page_products_handle"))
 
     flash("Successfully removed " + str(len(products)) + " products")
-    return redirect(url_for("page_products_remove"))
+    return redirect(url_for("page_products_handle"))
 
 
 ################################################################################
