@@ -878,7 +878,7 @@ def reduce_stock(db, id, amount):
             cur.execute("UPDATE Products SET in_stock=%(new_stock)s WHERE idProduct=%(idProduct)s ;", param)
         except Exception as err:
             db.close()
-            flash("Error: {}".format(err))
+            # flash("Error: {}".format(err))
             raise Exception("Error occured while reducing stock.")
     return
 
@@ -912,7 +912,7 @@ def place_order(db):
             db.commit()
         except Exception as err:
             db.close()
-            flash("Error: {}".format(err))
+            # flash("Error: {}".format(err))
             raise Exception("Error occured while moving from shoppingcart to order.")
     return products, price, stockProblem
 
@@ -939,8 +939,7 @@ def page_checkout():
     # Check if there are any item amounts exceeding stock amount, if go back to shoppingcart
     if len(stockProblem) != 0:
         flash("Note: Number of items exceed items in stock")
-        # TODO: Make sure we 'redirect' to correct page
-        return render_template("shoppingcart.html", products=products, genders=GENDERS, stockProblem=stockProblem)
+        return render_template("cart.html", products=products, genders=GENDERS, stockProblem=stockProblem)
     # Check if shopping cart is empty and redirect to products page if it is
     if len(products) == 0:
         flash("No items in shopping cart, please add some items before checking out")
@@ -962,7 +961,7 @@ def page_checkout_order():
         db.close()
     except:
         flash("Error occured while placing order, check amounts")
-        return render_template("shoppingcart.html", products=products, genders=GENDERS, stockproblem=stockProblem)
+        return redirect(url_for("page_cart"))
     flash("Order registered, thank you for shopping with USB-R-US")
     return render_template("ordersuccessful.html", products=products, genders=GENDERS, price=price)
 
