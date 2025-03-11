@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block title %}Order History{% endblock %}
+{% block content%}
+
+<h1>Order History</h1>
+
+{% if not orders %}
+	<p>Sorry, no orders to show!</p>
+{% endif %}
+
+{% for date, products in orders|items %}
+<h2>Order {{ date.strftime("%Y-%m-%d %H:%M") }}</h2>
+<table>
+	<tr>
+        <th>User</th>
+		<th>Amount</th>
+		<th>Name</th>
+		<th>Price/unit</th>
+	</tr>
+	{% for p in products %}
+	<tr>
+        <td>{{p.iduser}}</td>
+		<td>{{p.amount}}</td>
+		<td><a href="/product/{{p.idproduct}}">
+				{{p.length}}m {{p.color}} USB {{p.standard}} cable
+				({{p.c1type}} {{genders[p.c1gender]}} to
+				{{p.c2type}} {{genders[p.c2gender]}})
+			</a></td>
+		<td>{{p.price}}</td>
+	</tr>
+	{% endfor %}
+</table>
+{% endfor %}
+
+{% endblock %}

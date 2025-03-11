@@ -23,19 +23,23 @@
 				{% if session.get("email") %}
 					<p>User: {{session.get("email")}}</p>
 					<a href="/cart">Cart</a>
-					<a href="/orders">Order history</a>
+					
 					<a href="/profile">Profile</a>
 					<a href="/logout">Logout</a>
+				
 				{% else %}
 					<a href="/login">Login</a>
 					<a href="/register">Register</a>
+				{% endif %}
+				{% if session.get("role") == 0 %}
+					<a href="/orders">Order history</a>
 				{% endif %}
 
 				<!-- Super secret admin menu -->
 				{% if session.get("role") == 1 %}
 					<hr>
 					<p>Administration</p>
-					<a href="/orders">Order history</a>
+					<a href="/adminorders">Order history</a>
 					<a href="/products/handle">Handle products</a>
 				{% endif %}
 
