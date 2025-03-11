@@ -22,9 +22,10 @@
 				<!-- User menu -->
 				{% if session.get("email") %}
 					<p>User: {{session.get("email")}}</p>
+					<a href="/cart">Cart</a>
+					<a href="/orders">Order history</a>
 					<a href="/profile">Profile</a>
 					<a href="/logout">Logout</a>
-					<a href="/cart">Cart</a>
 				{% else %}
 					<a href="/login">Login</a>
 					<a href="/register">Register</a>

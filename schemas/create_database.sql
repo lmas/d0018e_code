@@ -144,12 +144,17 @@ INSERT INTO Products (price, in_stock, standard, length, color, idconnector1, id
 (59, 10, 1.0, 0.5, "black", 2, 4),
 (59, 10, 1.0, 0.5, "red", 2, 4);
 
--- TODO: insert exampe data to shopping cart/orders/reviews when working on those features.
-
 INSERT INTO ShoppingCarts (iduser, idproduct, amount) VALUES
 (2, 1, 1),
 (2, 4, 2),
 (2, 2, 1);
+
+INSERT INTO Orders (iduser, idproduct, amount, price, timestamp) VALUES
+(2, 1, 5, 159, 1741688175),
+(2, 2, 1, 199, 1741688175),
+(2, 5, 1, 59,  1706782642),
+(2, 6, 2, 59,  1706782642),
+(2, 1, 1, 200, 1738405042);
 
 INSERT INTO Reviews (iduser, idproduct, rating, comment) VALUES
 (1, 1, 4, "Love this black cable! But it was expensive..."),

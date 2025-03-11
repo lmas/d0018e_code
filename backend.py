@@ -1,4 +1,6 @@
 import os, sys, secrets, time
+from datetime import datetime
+from collections import defaultdict
 
 from flask import Flask, request, render_template, session, redirect, url_for, flash
 from flask import g as request_globals
@@ -18,7 +20,6 @@ app = Flask(__name__)
 # https://flask.palletsprojects.com/en/stable/quickstart/#sessions
 # Here we're randomizing the app.secret_key every time the server is restarted
 app.secret_key = secrets.token_bytes()
-app.secret_key = "asdasdasdasd"
 
 ################################################################################
 # GLOBAL HELPER FUNCTIONS (these should be at the top of the file)
@@ -965,6 +966,42 @@ def page_checkout_order():
     flash("Order registered, thank you for shopping with USB-R-US")
     return render_template("ordersuccessful.html", products=products, genders=GENDERS, price=price)
 
+
+################################################################################
+# ORDER HISTORY PAGES
+
+def get_customer_orders(db, user):
+    param = {"user": user}
+    with db.cursor(dictionary=True) as cur:
+        cur.execute("SELECT * FROM Orders WHERE iduser = %(user)s ORDER BY timestamp DESC;", param)
+        rows = cur.fetchall()
+    return rows
+
+@app.route("/orders")
+def page_customer_orders():
+    user = session.get("id")
+    if user is None:
+        flash("Please log in before viewing order history")
+        return redirect(url_for("page_home"))
+
+    db = get_db()
+    try:
+        items = get_customer_orders(db, user)
+        # Creates a new dict whose default value (for keys) are lists
+        orders = defaultdict(list)
+        for row in items:
+            product = get_product(db, row["idproduct"])
+            product["price"] = row["price"]
+            product["amount"] = row["amount"]
+            key = datetime.fromtimestamp(row["timestamp"])
+            orders[key].append(product)
+        db.close()
+    except Exception as err:
+        print("Error getting orders/products: " + str(err))
+        flash("Error occured while getting order history")
+        return redirect(url_for("page_home"))
+
+    return render_template("customerorders.html", orders=orders, genders=GENDERS)
 
 ################################################################################
 
