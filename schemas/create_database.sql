@@ -154,7 +154,9 @@ INSERT INTO Orders (iduser, idproduct, amount, price, timestamp) VALUES
 (2, 2, 1, 199, 1741688175),
 (2, 5, 1, 59,  1706782642),
 (2, 6, 2, 59,  1706782642),
-(2, 1, 1, 200, 1738405042);
+(2, 1, 1, 200, 1738405042),
+(3, 1, 1, 200, 1738405043);
+
 
 INSERT INTO Reviews (iduser, idproduct, rating, comment) VALUES
 (1, 1, 4, "Love this black cable! But it was expensive..."),

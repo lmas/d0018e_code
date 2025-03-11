@@ -977,6 +977,13 @@ def get_customer_orders(db, user):
         rows = cur.fetchall()
     return rows
 
+def get_all_orders(db):
+    #param = {"user": user}
+    with db.cursor(dictionary=True) as cur:
+        cur.execute("SELECT * FROM Orders ORDER BY timestamp DESC;")
+        rows = cur.fetchall()
+    return rows
+
 @app.route("/orders")
 def page_customer_orders():
     user = session.get("id")
@@ -987,6 +994,7 @@ def page_customer_orders():
     db = get_db()
     try:
         items = get_customer_orders(db, user)
+        print(items)
         # Creates a new dict whose default value (for keys) are lists
         orders = defaultdict(list)
         for row in items:
@@ -1003,6 +1011,36 @@ def page_customer_orders():
 
     return render_template("customerorders.html", orders=orders, genders=GENDERS)
 
+@app.route("/adminorders")
+def page_admin_orders():
+    user = session.get("id")
+    if user is None:
+        flash("Please log in before viewing order history")
+        return redirect(url_for("page_home"))
+    if session.get("role") != 1:
+        flash("Insufficient permissions")
+        return redirect(url_for("page_home"))
+    print(user)
+    db = get_db()
+    try:
+        items = get_all_orders(db)
+        print(items)
+        # Creates a new dict whose default value (for keys) are lists
+        orders = defaultdict(list)
+        for row in items:
+            product = get_product(db, row["idproduct"])
+            product["iduser"] = row["iduser"]
+            product["price"] = row["price"]
+            product["amount"] = row["amount"]
+            key = datetime.fromtimestamp(row["timestamp"])
+            orders[key].append(product)
+        db.close()
+    except Exception as err:
+        print("Error getting orders/products: " + str(err))
+        flash("Error occured while getting order history")
+        return redirect(url_for("page_home"))
+
+    return render_template("adminorders.html", orders=orders, genders=GENDERS)
 ################################################################################
 
 if __name__ == "__main__":
